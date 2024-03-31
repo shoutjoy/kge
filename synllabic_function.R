@@ -8,6 +8,9 @@ printall <- function(data) print(data, n=Inf)
 pall <- function(data) print(data, n=Inf)
 dall <- function(data) data.frame(data)
 
+
+
+#한글의 초성과 중성, 종성을 분리하는 함수
 split_korean_word <- function(word, paste=TRUE) {
   # Hangul Unicode Range
   HANGUL_START <- 44032
@@ -33,6 +36,7 @@ split_korean_word <- function(word, paste=TRUE) {
   )
 
   result <- character(0)
+
   for (char in strsplit(word, '')[[1]]) {
     if (char %in% letters) {
       result <- append(result, char)
@@ -917,6 +921,10 @@ Replace <- function(vector, pattern=NA, imp="") {
 
 
 
+
+
+
+
 #필요할 때마다 성조패턴 적용 -------------
 auto_pattern = function(data,
                         type = NULL
@@ -993,6 +1001,432 @@ kge_accent_table = function(data, Var1="a1", Var2="성조", trans = TRUE){
   }else{res}
   res
 }
+
+
+
+
+
+
+
+#두가지 행렬데이터를 결합해주는 함수 ------
+combine_data <- function(observed_expected, p_value, left="", right="") {
+  # Extract row and column names
+  row_names <- rownames(observed_expected)
+  col_names <- colnames(observed_expected)
+
+  # Create a combined data frame
+  combined <- data.frame(matrix("",
+                                nrow = nrow(observed_expected),
+                                ncol = ncol(observed_expected)))
+  row.names(combined) <- row_names
+
+  # Fill in combined data frame with observed/expected values and p-values
+  for (i in 1:nrow(observed_expected)) {
+    for (j in 1:ncol(observed_expected)) {
+      value <- observed_expected[i, j]
+      p_value_cell <- p_value[i, j]
+      combined[i, j] <- paste0(value, left, format(p_value_cell, scientific = FALSE, digits = 5), right)
+    }
+  }
+
+  # Assign column names
+  colnames(combined) <- col_names
+
+  return(combined)
+}
+
+# Example data
+# observed_expected <- matrix(c(1.0587162, 1.1477347, 0.50877193,
+#                               1.1269248, 0.5743712, 1.94957983,
+#                               0.9163776, 1.4060606, 0.03515152,
+#                               0.9530237, 0.8624314, 1.44531611),
+#                             nrow = 4, byrow = TRUE,
+#                             dimnames = list(c("공명음", "마찰음", "유기음_경음", "평파열음_평파찰음"),
+#                                             c("H", "H(H)", "L")))
+
+# p_value <- matrix(c(0, 0.00001, 0.00000,
+#                     0, 0.00000, 0.01497,
+#                     0, 0.00013, 0.00000,
+#                     0, 0.00000, 0.00102),
+#                   nrow = 4, byrow = TRUE,
+#                   dimnames = list(c("공명음", "마찰음", "유기음_경음", "평파열음_평파찰음"),
+#                                   c("H", "H(H)", "L")))
+
+# # Combine the data
+# combined_data <- combine_data(observed_expected, p_value)
+# print(combined_data)
+
+
+#행렬, 데이터프레임에 통계적 유의성을 출력해주는 함수 단순표현과 정확표현
+add_significance_symbols <- function(p_value_table, simple=FALSE) {
+  # Define significance levels
+  significance_levels <- c(0.001, 0.01, 0.05)
+
+
+  if(simple){
+    # Convert p-values to significance symbols
+    symbols <- matrix("", nrow = nrow(p_value_table), ncol = ncol(p_value_table))
+    for (i in 1:nrow(p_value_table)) {
+      for (j in 1:ncol(p_value_table)) {
+        if (p_value_table[i, j] < significance_levels[1]) {
+          symbols[i, j] <- "*"
+        } else if (p_value_table[i, j] < significance_levels[2]) {
+          symbols[i, j] <- "*"
+        } else if (p_value_table[i, j] < significance_levels[3]) {
+          symbols[i, j] <- "*"
+        }
+      }
+    }
+  }else{
+    # Convert p-values to significance symbols
+    symbols <- matrix("", nrow = nrow(p_value_table), ncol = ncol(p_value_table))
+    for (i in 1:nrow(p_value_table)) {
+      for (j in 1:ncol(p_value_table)) {
+        if (p_value_table[i, j] < significance_levels[1]) {
+          symbols[i, j] <- "***"
+        } else if (p_value_table[i, j] < significance_levels[2]) {
+          symbols[i, j] <- "**"
+        } else if (p_value_table[i, j] < significance_levels[3]) {
+          symbols[i, j] <- "*"
+        }
+      }
+    }
+  }
+
+
+  # Combine symbols with p-values
+  result <- p_value_table
+  for (i in 1:nrow(p_value_table)) {
+    for (j in 1:ncol(p_value_table)) {
+      # result[i, j] <- paste0(format(p_value_table[i, j], scientific = FALSE, digits = 5), symbols[i, j])
+
+      result[i, j] <- symbols[i, j]
+
+    }
+  }
+
+  return(result)
+}
+
+# Add significance symbols
+# p_value
+# add_significance_symbols(p_value)
+
+# # Example p-value table
+# p_value <- matrix(c(0, 0.00001, 0.00000,
+#                     0, 0.00000, 0.01497,
+#                     0, 0.00013, 0.00000,
+#                     0, 0.00000, 0.00102),
+#                   nrow = 4, byrow = TRUE,
+#                   dimnames = list(c("공명음", "마찰음", "유기음_경음", "평파열음_평파찰음"),
+#                                   c("H", "H(H)", "L")))
+
+
+# Son, J. H., & Ito, C. (2016). The accent of Korean native nouns: North Gyeongsang compared to South Gyeongsang: North Gyeongsang compared to South Gyeongsang. 음성음운형태론연구, 22(3), 499-532.
+#테이블의 계산법을 제샇ㅁ
+
+calculate_chi_sig <- function(observed, type = "data", simple=FALSE) {
+  # 기대값 계산
+  row_totals <- rowSums(observed)
+  col_totals <- colSums(observed)
+  grand_total <- sum(observed)
+
+  expected <- outer(row_totals, col_totals, "*") / grand_total
+
+  # 카이제곱 통계량 계산
+  chi_square_statistic <- sum((observed - expected)^2 / expected)
+
+  # 자유도
+  df <- (nrow(observed) - 1) * (ncol(observed) - 1)
+
+  # p-값 계산
+  p_value <- pchisq(chi_square_statistic, df, lower.tail = FALSE)
+
+  # 각 셀에 대한 p-값 반환
+  cell_p_values <- matrix(0, nrow = nrow(observed), ncol = ncol(observed))
+  for (i in 1:nrow(observed)) {
+    for (j in 1:ncol(observed)) {
+      cell_observed <- observed[i, j]
+      if (cell_observed == 0) {
+        cell_p_values[i, j] <- 1  # If observed is 0, set p-value to 1
+      } else {
+
+      cell_expected <- expected[i, j]
+      cell_chi_square <- ((cell_observed - cell_expected)^2) / cell_expected
+      cell_p_values[i, j] <- pchisq(cell_chi_square, df = 1, lower.tail = FALSE)
+      }}
+
+  }
+  observed_over_expected_ratios = round(observed / expected, 3)
+
+
+
+  colnames(cell_p_values) = colnames(observed)
+  rownames(cell_p_values) = rownames(observed)
+
+  p_sig = add_significance_symbols(cell_p_values, simple= simple)
+  colnames(p_sig) = colnames(observed)
+  rownames(p_sig) = rownames(observed)
+
+
+
+  #처리한 값 :관측값과
+  chi_combine  =  combine_data(observed, observed_over_expected_ratios, left = "(", right=")")
+  # chi_sig =  combine_data(observed_over_expected_ratios, p_sig)
+  #처리한 값
+  chi_sig =  combine_data(observed_over_expected_ratios, p_sig)
+  chi_sig2 =  format(combine_data(chi_combine, p_sig), 5)
+
+
+
+  # cramers' v
+  cramersv = cramers_v(observed)
+  # chisq
+  chisq = chisq.test(observed)
+
+  Res = list(
+    # chi_square_statistic = chi_square_statistic,
+    #           degrees_of_freedom = df,
+    #           p_value = p_value,
+    chisq_test= chisq,
+    cramersv= cramersv,
+    observed_over_expected_ratios = observed_over_expected_ratios,
+    cell_p_values = cell_p_values,
+    p_sig = p_sig,
+    chi_sig=chi_sig,
+    chi_sig2=chi_sig2
+    )
+
+  switch(type,
+         res= Res,
+         all= Res,
+         chisq_test= chisq,
+         cramersv= cramersv,
+         observed_over_expected_ratios = observed_over_expected_ratios,
+         cell_p_values = cell_p_values,
+         p_sig = p_sig,
+         data = chi_sig,
+         data2 = chi_sig2
+         )
+
+}
+
+# # calculate_chi_sig(data)
+# # Example data
+# matrix(c(36, 67, 11,
+#                  0, 35, 44,
+#                  41, 108, 1,
+#                  56, 87, 54), nrow = 4, byrow = TRUE,
+#                dimnames = list(c("공명음", "마찰음",
+#                                  "유기음_경음", "평파열음_평파찰음"),
+#                                c("H", "H(H)", "L"))) %>%
+# # calculate_chi_sig("data2")
+# calculate_chi_sig("all")
+#
+# matrix(c(36, 67, 11,
+#                  40, 35, 44,
+#                  41, 108, 1,
+#                  56, 87, 54), nrow = 4, byrow = TRUE,
+#                dimnames = list(c("공명음", "마찰음",
+#                                  "유기음_경음", "평파열음_평파찰음"),
+#                                c("H", "H(H)", "L"))) %>%
+# calculate_chi_sig(simple = TRUE)
+# ##ref
+# chisq.test(matrix(c(36, 67, 11,
+#                       40, 35, 44,
+#                       41, 108, 1,
+#                       56, 87, 54), nrow = 4, byrow = TRUE,
+#                     dimnames = list(c("공명음", "마찰음",
+#                                       "유기음_경음", "평파열음_평파찰음"),
+#                                     c("H", "H(H)", "L")))   )
+
+
+
+
+
+#범주형 변수의 상관계수
+cramers_v <- function(data) {
+  # if (!requireNamespace("vcd", quietly = TRUE)) {
+  #   install.packages("vcd")
+  # }
+  # library(vcd)
+
+  # Calculate chi-square test for independence
+  chi_square_test <- chisq.test(data)
+
+  # Calculate Cramer's V
+  n <- sum(data)
+  num_rows <- nrow(data) - 1
+  num_cols <- ncol(data) - 1
+  phi <- sqrt(chi_square_test$statistic / n)
+  v <- sqrt(phi / min(num_rows, num_cols))
+
+  # Calculate p-value
+  p_value <- pchisq(chi_square_test$statistic, df = chi_square_test$parameter, lower.tail = FALSE)
+
+  res = cbind.data.frame(Cramer_V = v, p.value = p_value)
+
+  res = res
+  res
+}
+
+# matrix(c(36, 67, 11,
+#          40, 35, 44,
+#          41, 108, 1,
+#          56, 87, 54), nrow = 4, byrow = TRUE,
+#        dimnames = list(c("공명음", "마찰음", "유기음_경음", "평파열음_평파찰음"),
+#                        c("H", "H(H)", "L"))) %>%
+#   cramers_v()
+
+# # A tibble: 1 × 3
+# Cramer_V  p.value sig
+# <dbl>    <dbl> <chr>
+# 0.441 1.01e-16 ***
+
+
+
+perform_chi_square_test <-  function(observed, type = "data", simple=FALSE) {
+  # 기대값 계산
+  row_totals <- rowSums(observed)
+  col_totals <- colSums(observed)
+  grand_total <- sum(observed)
+
+  expected <- outer(row_totals, col_totals, "*") / grand_total
+
+  # 카이제곱 통계량 계산
+  chi_square_statistic <- sum((observed - expected)^2 / expected)
+
+  # 자유도
+  df <- (nrow(observed) - 1) * (ncol(observed) - 1)
+
+  # p-값 계산
+  p_value <- pchisq(chi_square_statistic, df, lower.tail = FALSE)
+
+  # 각 셀에 대한 p-값 반환
+  cell_p_values <- matrix(0, nrow = nrow(observed), ncol = ncol(observed))
+  for (i in 1:nrow(observed)) {
+    for (j in 1:ncol(observed)) {
+      cell_observed <- observed[i, j]
+      if (cell_observed == 0) {
+        cell_p_values[i, j] <- 1  # If observed is 0, set p-value to 1
+      } else {
+
+        cell_expected <- expected[i, j]
+        cell_chi_square <- ((cell_observed - cell_expected)^2) / cell_expected
+        cell_p_values[i, j] <- pchisq(cell_chi_square, df = 1, lower.tail = FALSE)
+      }}
+
+  }
+  observed_over_expected_ratios = round(observed / expected, 3)
+
+
+  colnames(cell_p_values) = colnames(observed)
+  rownames(cell_p_values) = rownames(observed)
+
+  p_sig = add_significance_symbols(cell_p_values, simple= simple)
+  colnames(p_sig) = colnames(observed)
+  rownames(p_sig) = rownames(observed)
+
+
+
+  #처리한 값 :관측값과
+  chi_combine  =  combine_data(observed, observed_over_expected_ratios, left = "(", right=")")
+  # chi_sig =  combine_data(observed_over_expected_ratios, p_sig)
+  #처리한 값
+  chi_sig =  combine_data(observed_over_expected_ratios, p_sig)
+  chi_sig2 =  format(combine_data(chi_combine, p_sig), 5)
+
+
+
+  # cramers' v
+  cramersv = cramers_v(observed)
+  # chisq
+  chisq = chisq.test(observed)
+
+  Res = list(
+    # chi_square_statistic = chi_square_statistic,
+    #           degrees_of_freedom = df,
+    #           p_value = p_value,
+    chisq_test= chisq,
+    cramersv= cramersv,
+    observed_over_expected_ratios = observed_over_expected_ratios,
+    cell_p_values = cell_p_values,
+    p_sig = p_sig,
+    chi_sig=chi_sig,
+    chi_sig2=chi_sig2
+  )
+  cat("\nSon, J. H., & Ito, C. (2016). The accent of Korean native nouns:
+North Gyeongsang compared to South Gyeongsang: North Gyeongsang compared to South Gyeongsang. 음성음운형태론연구, 22(3), 499-532.
+여기에서 observed/expected 값에 유의성을 chisq.test의 각 셀값으로 계산한 것으로 제시함 \n\n")
+
+
+  switch(type,
+         res= Res,
+         all= Res,
+         chisq_test= chisq,
+         cramersv= cramersv,
+         observed_over_expected_ratios = observed_over_expected_ratios,
+         cell_p_values = cell_p_values,
+         p_sig = p_sig,
+         data = chi_sig,
+         data2 = chi_sig2
+  )
+
+}
+
+
+
+
+# #
+# matrix(c(36, 67, 11,
+#          40, 35, 44,
+#          41, 108, 1,
+#          56, 87, 54), nrow = 4, byrow = TRUE,
+#        dimnames = list(c("공명음", "마찰음",
+#                          "유기음_경음", "평파열음_평파찰음"),
+#                        c("H", "H(H)", "L"))) %>%
+#   perform_chi_square_test()
+# matrix(c(36, 67, 11,
+#          40, 35, 44,
+#          41, 108, 1,
+#          56, 87, 54), nrow = 4, byrow = TRUE,
+#        dimnames = list(c("공명음", "마찰음",
+#                          "유기음_경음", "평파열음_평파찰음"),
+#                        c("H", "H(H)", "L"))) %>%
+#   perform_chi_square_test("all")
+# # #
+# matrix(c(36, 67, 11,
+#          40, 35, 44,
+#          41, 108, 1,
+#          56, 87, 54), nrow = 4, byrow = TRUE,
+#        dimnames = list(c("공명음", "마찰음",
+#                          "유기음_경음", "평파열음_평파찰음"),
+#                        c("H", "H(H)", "L"))) %>%
+#   perform_chi_square_test(type="res")
+
+
+# Agresti, A. (2002). Categorical Data Analysis (2nd ed.). Wiley.
+# Sokal, R. R., & Rohlf, F. J. (2012). Biometry: The Principles and Practice of Statistics in Biological Research (4th ed.). W. H. Freeman.
+
+
+
+
+
+
+
+
+# https://search.r-project.org/CRAN/refmans/confintr/html/cramersv.html
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1076,7 +1510,8 @@ kge_chisq_table = function(data,
                            type = "res2",
                            digits = 3,yadd=0.1,ncol=NULL,
                            trans = FALSE,
-                           ko = TRUE)
+                           simple= FALSE, #유의성 종류
+                           ko = TRUE)  #패턴그래프
 {
 
   data =  data %>%
@@ -1123,10 +1558,12 @@ kge_chisq_table = function(data,
 
     # g= NULL
   }
-  #
+  #observer/Expected 에 유의성 표시
+  chi_table_sig = calculate_chi_sig(data, simple = simple)
+  chi_table_sig2 = perform_chi_square_test(data, simple = simple, type = "data2")
 
-
-  chi_table_md = chi_table %>%
+  #유의성표시된 것으로 변경
+  chi_table_md = chi_table_sig %>%
     markdown_table(caption = paste0(title,chi_mag),
                    digits = digits,
                    general = NULL)
@@ -1148,16 +1585,22 @@ kge_chisq_table = function(data,
     graph = patternGraph1(chi_table, raw = FALSE, yadd = yadd, ncol = ncol)
   }
 
+
+  #최종울력
   result1 = list(
     # msg=msg,
     crosstable = data_margin,
     data_margin %>%
       markdown_table(caption = paste0(title," Contingency table"),
                      general = NULL),
-    chisq_test = res,
+    chisq_test_overall = res,
+
     # chi_df = res_df,
-    chisq_report = res_report,
+    chisq_report_overall = res_report,
+
     chi_table = chi_table ,
+    chi_table_sig_each_variable = chi_table_sig,
+    chi_table_sig_each_variable2 = chi_table_sig2,
     g = graph,
     chi_table_md)
 
@@ -1191,7 +1634,7 @@ kge_chisq_table = function(data,
 }
 
 
-# chisq table observed/Expected table
+ # chisq table observed/Expected table
 
 
 # chisq table observed/Expected table
@@ -1432,7 +1875,7 @@ combind_person= function(data){
 
 
 ### 음절별 성조의 패턴
-### 음절별 성조의 패턴
+### 음절별 성조의 패턴calculate_chi_sig
 
 ### 음절별 성조의 패턴 그래프 --------
 patternGraph1 = function(data,
@@ -1461,6 +1904,8 @@ patternGraph1 = function(data,
                    cols=2: (ncol(data1)+1) )
 
   }
+
+
 
   g = data_long%>% ggplot(aes(x = accent, y = ratio))+
     geom_bar(stat = "identity", aes( fill = accent),
