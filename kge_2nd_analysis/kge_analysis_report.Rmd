@@ -1,0 +1,111 @@
+---
+title: "경남방언의 명사성조연구(김고은, 2024)"
+author: "analysis by Park Joonghee"
+date: "2024-03-26"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+setwd("F:/Rwork/02_OutAna/kimgoeun_seoul_phD2024")
+library(jjstat)
+
+```
+
+
+
+
+# 1.데이터 
+
+## 1.1 규칙 
+
+```{r}
+# 데이터 처리 프로세스 -----------
+CHOSUNG_LIST <- c(
+  'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ',
+  'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'
+);CHOSUNG_LIST
+
+```
+```{r}
+# 중성 
+JUNGSUNG_LIST <- c(
+  'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ',
+  'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'
+);JUNGSUNG_LIST
+
+
+```
+
+
+```{r}
+# 종성
+JONGSUNG_LIST <- c(
+  '', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ',
+  'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ',
+  'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'
+);JONGSUNG_LIST
+```
+
+
+
+
+#### 초성규칙
+```{r}
+
+tonecheck1 <- data.frame(
+  tone = c("ㄱ", "ㄷ", "ㅂ", "ㅈ", "ㄱ", "ㄴ", "ㄹ", "ㅁ", "ㅇ", "ㄲ", "ㄸ", "ㅃ", "ㅉ", "ㅋ", "ㅌ", "ㅍ", "ㅊ", "ㅎ", "ㅅ", "ㅆ"),
+  code = c("lax", "lax", "lax", "lax", "lax", "son", "son", "son", "son", "tsasp", "tsasp", "tsasp", "tsasp", "tsasp", "tsasp", "tsasp", "tsasp", "fri", "fri", "fri")
+);tonecheck1 %>% kable("markdown")
+
+```
+
+
+#### 중성규칙
+```{r}
+tonecheck2 <- data.frame(
+  tone = c("ㅏ", "ㅐ", "ㅑ", "ㅒ", "ㅓ", "ㅔ", "ㅕ", "ㅖ", "ㅗ",
+           "ㅘ", "ㅙ", "ㅚ", "ㅛ", "ㅜ", "ㅝ", "ㅞ", "ㅟ", "ㅠ", "ㅡ", "ㅢ"),
+  code = c("sg", "sg", "dp", "dp", "sg", "sg", "dp", "dp", "sg",
+           "dp", "dp", "dp", "dp", "sg", "dp", "dp", "dp", "dp", "sg", "dp")
+);tonecheck2 %>% kable("markdown")
+
+```
+
+
+
+#### 종성규칙 
+```{r}
+tonecheck3 <- data.frame(
+  tone = c("ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ", "ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ"),
+  code = c("obs", "obs", "obs", "son", "obs", "obs", "obs", "son", "obs", "obs", "obs", "obs", "obs", "obs", "obs", "son", "obs", "obs", "obs", "obs", "son", "obs", "obs", "obs", "obs", "obs", "obs")
+);tonecheck3%>% kable("markdown")
+```
+
+
+
+## 1.2 data import 
+```{r}
+
+# data import ----
+library(readxl)
+kge20240326 <- read_excel("kge20240326.xlsx")
+
+Kge_person = readxl::read_excel("F:/Rwork/02_OutAna/kimgoeun_seoul_phD2024/kge20240326.xlsx", 
+                             sheet = "제보자분류")
+Kge_word = readxl::read_excel("F:/Rwork/02_OutAna/kimgoeun_seoul_phD2024/kge20240326.xlsx", 
+                             sheet = "단어리스트")
+Kge_jbs = readxl::read_excel("F:/Rwork/02_OutAna/kimgoeun_seoul_phD2024/kge20240326.xlsx", 
+                             sheet = "JBS")
+Kge_khjo = readxl::read_excel("F:/Rwork/02_OutAna/kimgoeun_seoul_phD2024/kge20240326.xlsx",
+                              sheet = "KHJO")
+Kge_lhb = readxl::read_excel("F:/Rwork/02_OutAna/kimgoeun_seoul_phD2024/kge20240326.xlsx", 
+                             sheet = "LHB")
+Kge_jmh = readxl::read_excel("F:/Rwork/02_OutAna/kimgoeun_seoul_phD2024/kge20240326.xlsx",
+                             sheet = "JMH")
+```
+
+
+
