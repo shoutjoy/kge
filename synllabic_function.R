@@ -1221,7 +1221,7 @@ calculate_chi_sig <- function(observed, type = "data", simple=FALSE) {
 #                                  "유기음_경음", "평파열음_평파찰음"),
 #                                c("H", "H(H)", "L"))) %>%
 # # calculate_chi_sig("data2")
-# calculate_chi_sig("all")
+# calculate_chi_sig("p_sig")
 #
 # matrix(c(36, 67, 11,
 #                  40, 35, 44,
@@ -1394,7 +1394,7 @@ North Gyeongsang compared to South Gyeongsang: North Gyeongsang compared to Sout
 #                          "유기음_경음", "평파열음_평파찰음"),
 #                        c("H", "H(H)", "L"))) %>%
 #   perform_chi_square_test("all")
-# # #
+# # # #
 # matrix(c(36, 67, 11,
 #          40, 35, 44,
 #          41, 108, 1,
@@ -1511,7 +1511,7 @@ kge_chisq_table = function(data,
                            digits = 3,yadd=0.1,ncol=NULL,
                            trans = FALSE,
                            simple= FALSE, #유의성 종류
-                           ko = TRUE)  #패턴그래프
+                           ko = FALSE)  #패턴그래프
 {
 
   data =  data %>%
@@ -1895,6 +1895,27 @@ patternGraph1 = function(data,
       pivot_longer(names_to = "accent",
                    values_to = 'ratio',
                    cols = 2: (ncol(data1$chi_table)+1) )
+
+    p_sig0 = calculate_chi_sig(data, type="p_sig")
+    data_long = cbind.data.frame(data_long, p_sig0)
+
+
+
+    g = data_long%>% ggplot(aes(x = accent, y = ratio))+
+      geom_bar(stat = "identity", aes( fill = accent),
+               position = "dodge", show.legend = FALSE)+
+      geom_hline(yintercept = 1, linetype=2, color="gray80")+
+      geom_text(aes(label =  paste(round(ratio,2) , p_sig )), hjust = -0.1, size = 4)+
+      ylim(0,max(data_long$ratio)+ yadd)+
+      coord_flip()+
+      theme_bw()+
+      theme(axis.text = element_text(size= text_size),
+            axis.title = element_text(size= axis_size),
+            strip.text = element_text(size= strip_size)
+      )+
+      scale_fill_grey(start = 0, end = 0.7) +
+      facet_wrap(~ syllabic , ncol = ncol)
+
   }else{
     data1 <- data
 
@@ -1903,25 +1924,27 @@ patternGraph1 = function(data,
       pivot_longer(names_to = "accent", values_to = 'ratio',
                    cols=2: (ncol(data1)+1) )
 
+    p_sig0 = calculate_chi_sig(data, type="p_sig")
+    data_long = cbind.data.frame(data_long, p_sig0)
+
+
+    g = data_long%>% ggplot(aes(x = accent, y = ratio))+
+      geom_bar(stat = "identity", aes( fill = accent),
+               position = "dodge", show.legend = FALSE)+
+      geom_hline(yintercept = 1, linetype=2, color="gray80")+
+      geom_text(aes(label =  paste(round(ratio,2), p_sig )), hjust = -0.1, size = 4)+
+      ylim(0,max(data_long$ratio)+ yadd)+
+      coord_flip()+
+      theme_bw()+
+      theme(axis.text = element_text(size= text_size),
+            axis.title = element_text(size= axis_size),
+            strip.text = element_text(size= strip_size)
+      )+
+      scale_fill_grey(start = 0, end = 0.7) +
+      facet_wrap(~ syllabic , ncol = ncol)
+
+
   }
-
-
-
-  g = data_long%>% ggplot(aes(x = accent, y = ratio))+
-    geom_bar(stat = "identity", aes( fill = accent),
-             position = "dodge", show.legend = FALSE)+
-    geom_hline(yintercept = 1, linetype=2, color="gray80")+
-    geom_text(aes(label = round(ratio,2)), hjust = -0.1, size = 4)+
-    ylim(0,max(data_long$ratio)+ yadd)+
-    coord_flip()+
-    theme_bw()+
-    theme(axis.text = element_text(size= text_size),
-          axis.title = element_text(size= axis_size),
-          strip.text = element_text(size= strip_size)
-    )+
-    scale_fill_grey(start = 0, end = 0.7) +
-    facet_wrap(~ syllabic , ncol = ncol)
-
 
   res = list(data, data_long, g)
   res1 = list(g)
