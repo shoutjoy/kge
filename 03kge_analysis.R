@@ -762,6 +762,7 @@ kge_bind2a %>% filter(지역 =="부산" & type=="고유어1") %>%
 
 
 # > 고유어2  부산 -----------------------------------------------------------------
+kge_bind2a %>% data.frame()
 
 #고유어2 초성
 kge_bind2a %>% filter(지역 =="부산" & type=="고유어2") %>%
@@ -775,20 +776,39 @@ kge_bind2a %>% filter(지역 =="부산" & type=="고유어2") %>%
   patternGraph2()
 
 #* 고유어2 부산 종성 2개 weight (light, heavy)
-kge_bind2a %>% filter(지역 =="부산" & N ==1) %>%
+kge_bind2a %>% filter(지역 =="부산" & type=="고유어2") %>%
   auto_pattern("고유어2") %>%
-  kge_chisq_table("w1f","성조", "고유어2 부산 첫음절 종성 weight ")
+    kge_chisq_table("weigth_comb2","성조", "고유어2 부산 첫음절 종성 weight ")
 
+
+#* 고유어2 부산 종성 2개 weight (light, heavy)
+#* # X-Heavy
+kge_bind2a %>% filter(지역 =="부산" & type=="고유어2") %>%
+  auto_pattern("고유어2") %>%
+  kge_chisq_table("w2f","성조", "고유어2 부산 두번째 음절 -> 종성 weight ")
+
+
+
+kge_bind2a$w1f
+kge_bind2a %>% data.frame()
 #* 고유어2 부산 종성 2개 weight (light, heavy)그래프 전환
-kge_bind2a %>% filter(지역 =="부산" & N ==1) %>%
+kge_bind2a %>% filter(지역 =="부산" & type=="고유어2") %>%
   auto_pattern("고유어2") %>%
   kge_chisq_table("w1f","성조", "고유어2 부산 첫음절 종성 weight ") %>%
   patternGraph2()
 
 
 
-# > 고유어3 부산 ---------------------------------------------------------------
 
+kge_bind2a %>% filter(지역 =="부산" & type=="고유어2") %>%
+  auto_pattern("고유어2") %>%
+  unite(onsetcoda, c(a1, w1f), sep = " / ") %>%
+kge_chisq_table("onsetcoda","성조", "고유어2 부산 첫음절 종성 weight ")
+
+
+
+# > 고유어3 부산 ---------------------------------------------------------------
+kge_bind2a %>% str()
 # 고유어3초성
 kge_bind2a %>% filter(지역 =="부산" & type=="고유어3") %>%
   auto_pattern("고유어3") %>%
@@ -801,13 +821,17 @@ kge_bind2a %>% filter(지역 =="부산" & type=="고유어3") %>%
   patternGraph2()
 
 #* 고유어3 부산 종성 2개 weight (light, heavy)
-kge_bind2a %>% filter(지역 =="부산" & N ==1) %>%
+kge_bind2a %>% filter(지역 =="부산" & type=="고유어3") %>%
   auto_pattern("고유어3") %>%
-  kge_chisq_table("w1f","성조", "고유어3 부산 첫음절 종성 weight ")
+  kge_chisq_table("weigth_comb","성조", "고유어3 부산 첫음절 종성 weight ")
+#* 고유어3 부산 종성 2개 weight (light, heavy)
+kge_bind2a %>% filter(지역 =="부산" & type=="고유어3") %>%
+  auto_pattern("고유어3") %>%
+  kge_chisq_table("weigth_comb3","성조", "고유어3 부산 첫음절 종성 weight ")
 
 
 #* 고유어3 부산 종성 2개 weight (light, heavy)그래프 전환
-kge_bind2a %>% filter(지역 =="부산" & N ==1) %>%
+kge_bind2a %>% filter(지역 =="부산" & type=="고유어3") %>%
   auto_pattern("고유어3") %>%
   kge_chisq_table("w1f","성조", "고유어3 부산 첫음절 종성 weight ") %>%
   patternGraph2()
@@ -992,7 +1016,8 @@ aaaa$eig[1,2];aaaa$eig[2,2]
 aaaa %>% str()
 aaaa %>% summary()
 
-
+kge_bind2a %>% filter(지역 =="부산" & type == "고유어2") %>%
+  xtabs(formula = ~ 성조+ a1 + W2) %>% ca::mjca() %>% plot()
 
 kge_bind2a %>% filter(지역 =="부산" & type == "고유어2") %>%
   select(성조,a1, a3) %>% unite(onset_coda, a1:a3, sep = " / ") %>%
@@ -1017,46 +1042,104 @@ kge_bind2a %>% filter(지역 =="부산" & type == "고유어2") %>%
   theme_bw()+
   theme(legend.position = "none")
 
+
+kge_bind2a %>% data.frame()
+
 # 대응분석결과 #####
-ca_analysis = function(data, typekey= "", area="부산",
-                       col = c("black","red","blue"),
-                       arrows = c(F, T),
-                       col.row = "gray30",
-                       pointsize = 3,
-                       labelsize = 5
-                       ){
+# 변수를 새롭고 구성
 
-  res0 <- data %>% filter(지역 == area & type == typekey) %>%
-    select(성조,a1, a3) %>%
-    unite(onset_coda, a1:a3, sep = " / ") %>%
-    table() %>% t() %>%
-    # ca::mjca()
-    FactoMineR::CA()
+kge_bind2a %>% filter(지역 =="부산" & type == "고유어2") %>%
+  xtabs(formula = ~ 성조+ a1 + W2) %>% ca::mjca() %>% plot()
 
-  res1 = res0 %>% summary()
-  # res3 = res0 %>% fviz_screeplot(addlabels = TRUE)
+#
+# ca_analysis = function(data, typekey= "",
+#                        colsel= "weigth_comb2",
+#                        area="부산",
+#                        col = c("darkgreen","red","blue"),
+#                        arrows = c(F, T),
+#                        col.row = "gray30",
+#                        pointsize = 3,
+#                        labelsize = 4
+#                        ){
+#
+#   res0 <- data %>% filter(지역 == area & type == typekey) %>%
+#     select(성조, a1, all_of(colsel)  ) %>%
+#     # unite(onset_coda, c(a1, all_of(colsel) ), sep = " / ") %>%
+#     # table() %>% t() %>%
+#     xtabs(formula = ~ 성조+ a1 + all_of(colsel)) %>%
+#     # ca::mjca()
+#     FactoMineR::MCA()
+#
+#   res1 = res0 %>% summary()
+#   # res3 = res0 %>% fviz_screeplot(addlabels = TRUE)
+#
+#   explain =   round(res0$eig[1,2] + res0$eig[2,2],2)
+#   # res2 <- factoextra::fviz_ca_biplot(res1, repel = T, col.row ="black")
+#   # res2 <- plot(res0, arrows = arrows, col = c("black","red","blue"))
+#   res2 <- res0 %>%  factoextra::fviz_ca_biplot(
+#                     repel = T,
+#                     col.row = col.row ,
+#                 col.col = "contrib",
+#                 gradient.cols = c("red","tomato"),
+#                 labelsize = labelsize,
+#                 pointsize = pointsize,
+#                  arrows = arrows,
+#                 # map ="rowprincipal",
+#                 map ="symbiplot",
+#                  title = paste0(typekey," onset + coda (총설명력: ",explain,"%)"))+
+#                theme_bw() + theme(legend.position = "none")
+#
+#   res3 = res0 %>% factoextra::fviz_screeplot(addlabels = TRUE)
+#
+#   res = list(res1, res3,  res2)
+#   res
+# }
 
-  explain =   round(res0$eig[1,2] + res0$eig[2,2],2)
-  # res2 <- factoextra::fviz_ca_biplot(res1, repel = T, col.row ="black")
-  # res2 <- plot(res0, arrows = arrows, col = c("black","red","blue"))
-  res2 <- res0 %>%  factoextra::fviz_ca_biplot(
-                    repel = T,
-                    col.row = col.row ,
-                col.col = "contrib",
-                gradient.cols = c("red","tomato"),
-                labelsize = labelsize,
-                pointsize = pointsize,
-                 arrows = arrows,
-                # map ="rowprincipal",
-                map ="symbiplot",
-                 title = paste0(typekey," onset + coda (총설명력: ",explain,"%)"))+
-               theme_bw() + theme(legend.position = "none")
+ca_analysis= function(data, typekey, selcol, arrows =c(F,F), title=""){
 
-  res3 = res0 %>% factoextra::fviz_screeplot(addlabels = TRUE)
+  df = data %>% filter(지역 =="부산" & type == typekey) %>%
+  xtabs(formula = formula( paste("~ 성조 + a1 +", selcol) ))%>% ca::mjca()
 
-  res = list(res1, res3,  res2)
-  res
+ explain =   round((df$inertia.e[1] +   df$inertia.e[2])*100 , 2)
+
+  g = df %>% plot(arrows =arrows,
+                  main= paste(title, typekey,"(",explain , "%)"))
+
+ res =  list(df, g)
+ res
 }
+
+kge_bind2a %>% ca_analysis("고유어2", "W2")
+
+kge_bind2a %>% ca_analysis("고유어3", "W3")
+kge_bind2a %>% ca_analysis("고유어3", "weigth_comb")
+kge_bind2a %>% ca_analysis("외래어3", "W3")
+
+
+formula( paste("~ 성조 + a1 +", "고유어2") )
+
+bbb = kge_bind2a %>% filter(지역 =="부산" & type == "고유어3") %>%
+  xtabs(formula = ~ 성조+ a1 + W3) %>% ca::mjca()
+bbb
+bbb %>% str()
+round(bbb$inertia.e[1],4) *100
+round(bbb$inertia.e[2],4) *100
+
+?ca::mjca
+kge_bind2a %>% filter(지역 =="부산" & type == "고유어3") %>%
+  xtabs(formula = ~ 성조+ a1 + W3) %>% ca::mjca() %>% plot()
+
+
+
+kge_bind2a %>% ca_analysis("고유어3", "W3")
+kge_bind2a %>% ca_analysis("고유어4", "W3")
+kge_bind2a %>% ca_analysis("고유어4", "weigth_comb4")
+
+
+# *>대응분석 결과보기 --------------------------------------------------------------
+kge_bind2a %>% data.frame()
+kge_bind2a %>% str()
+# kge_bind2a %>% colnames()
 
 kge_bind2a %>% ca_analysis("고유어1")
 kge_bind2a %>% ca_analysis("고유어2")
