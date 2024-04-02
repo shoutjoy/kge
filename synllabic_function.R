@@ -9,6 +9,17 @@ pall <- function(data) print(data, n=Inf)
 dall <- function(data) data.frame(data)
 
 
+load(file ="kge_bind0a.RData")
+load(file ="kge_bind10a.RData")
+load(file ="kge_bind1a.RData")
+load(file ="kge_bind2a.RData")
+load(file =" Kge_person.RData")
+load(file = "Kge_arrangeRule.RData")
+load(file = "Kge_word.RData")
+load(file ="kge_bind3a.RData")
+
+
+
 
 #한글의 초성과 중성, 종성을 분리하는 함수
 split_korean_word <- function(word, paste=TRUE) {
@@ -507,9 +518,9 @@ kge_weigth = function(df, type= "res", pattern ="", remove= FALSE){
   # df001 = df00 %>% tidyr::unite(Wz , w1:w4, sep="",remove = remove )%>%
   #   tibble::tibble()
   df001= df00 %>% mutate(
-              W3 = substr(Wz, 1, 3),
-              W2 = substr(Wz, 1, 2)
-                         )
+    W3 = substr(Wz, 1, 3),
+    W2 = substr(Wz, 1, 2)
+  )
   df002 = df001%>% tibble::tibble()%>%
     mutate(
       w1f = ifelse(w1 == 0, "light", "heavy"),
@@ -691,6 +702,17 @@ kge_weigth_ko = function(df, type= "res", pattern ="", remove= FALSE){
         W3 == "111" ~ "X-폐음절-폐음절"),
 
 
+      # weigth_comb3X = dplyr::case_when(
+      #   W3 == "000" ~ "개음절-X-개음절",
+      #   W3 == "001" ~ "개음절-X-폐음절",
+      #   W3 == "010" ~ "개음절-X-개음절",
+      #   W3 == "011" ~ "개음절-X-폐음절",
+      #   W3 == "100" ~ "폐음절-X-개음절",
+      #   W3 == "101" ~ "폐음절-X-폐음절",
+      #   W3 == "110" ~ "폐음절-X-개음절",
+      #   W3 == "111" ~ "폐음절-X-폐음절"),
+
+
       weigth_comb4 = dplyr::case_when(
         Wz == "0000" ~ "개음절-개음절-개음절-개음절",
         Wz == "0001" ~ "개음절-개음절-개음절-폐음절",
@@ -742,67 +764,257 @@ kge_weigth_ko = function(df, type= "res", pattern ="", remove= FALSE){
 
 
 
+#
+# kge_weigth_add = function(df){
+#   df0 = df %>% tibble::tibble()%>%
+#     mutate(
+#       w1f = ifelse(w1 == 0, "light", "heavy"),
+#       w2f = ifelse(w2 == 0, "light", "heavy"),
+#       w3f = ifelse(w3 == 0, "light", "heavy"),
+#       w4f = ifelse(w4 == 0, "light", "heavy"),
+#     ) %>% as.data.frame() %>%
+#     mutate_at(c("w1f", "w2f","w3f","w4f"), as.factor)
+#
+#
+#   df1 = df0%>%
+#     dplyr::mutate(
+#       weigth_comb2 = dplyr::case_when(
+#         W3 == "000" ~ "light-light",
+#         W3 == "001" ~ "light-light",
+#         W3 == "010" ~ "light-heavy",
+#         W3 == "011" ~ "light-heavy",
+#         W3 == "100" ~ "heavy-light",
+#         W3 == "101" ~ "heavy-light",
+#         W3 == "110" ~ "heavy-heavy",
+#         W3 == "111" ~ "heavy-heavy")
+#     )%>% tibble::tibble()
+#
+#   # df1
+#
+#   df2 = df1%>%
+#     dplyr::mutate(
+#       weigth_comb3 = dplyr::case_when(
+#         W3 == "000" ~ "X-light-light",
+#         W3 == "001" ~ "X-light-heavy",
+#         W3 == "010" ~ "X-heavy-light",
+#         W3 == "011" ~ "X-heavy-heavy",
+#         W3 == "100" ~ "X-light-light",
+#         W3 == "101" ~ "X-light-heavy",
+#         W3 == "110" ~ "X-heavy-light",
+#         W3 == "111" ~ "X-heavy-heavy"),
+#
+#       weigth_comb4 = dplyr::case_when(
+#         Wz == "0000" ~ "light-light-light-light",
+#         Wz == "0001" ~ "light-light-light-heavy",
+#         Wz == "0010" ~ "light-light-heavy-light",
+#         Wz == "0011" ~ "light-light-heavy-heavy",
+#         Wz == "0100" ~ "light-heavy-light-light",
+#         Wz == "0101" ~ "light-heavy-light-heavy",
+#         Wz == "0110" ~ "light-heavy-heavy-light",
+#         Wz == "0111" ~ "light-heavy-heavy-heavy",
+#         Wz == "1000" ~ "heavy-light-light-light",
+#         Wz == "1001" ~ "heavy-light-light-heavy",
+#         Wz == "1010" ~ "heavy-light-heavy-light",
+#         Wz == "1011" ~ "heavy-light-heavy-heavy",
+#         Wz == "1100" ~ "heavy-heavy-light-light",
+#         Wz == "1101" ~ "heavy-heavy-light-heavy",
+#         Wz == "1110" ~ "heavy-heavy-heavy-light",
+#         Wz == "1111" ~ "heavy-heavy-heavy-heavy")
+#     )%>% tibble::tibble()
+#   df2
+# }
+#
+#
 
-kge_weigth_add = function(df){
-  df0 = df %>% tibble::tibble()%>%
+
+
+
+#한국어 대응분석용 데이터 생성  -----
+kge_weigth_add_ca = function(df001, type= "res", pattern ="", remove= FALSE){
+
+  # df0 = df %>% tibble::tibble()%>%
+  #   mutate(
+  #     w1 = ifelse(A3 == pattern, 0, 1),
+  #     w2 = ifelse(B3 == pattern, 0, 1),
+  #     w3 = ifelse(C3 == pattern, 0, 1),
+  #     w4 = ifelse(D3 == pattern, 0, 1)
+  #   ) %>% as.data.frame()
+  #
+  # df00 = df0 %>% tidyr::unite(Wz , w1:w4, sep="",remove = remove )%>%
+  #   tibble::tibble()
+  #
+  # # df001 = df00 %>% tidyr::unite(Wz , w1:w4, sep="",remove = remove )%>%
+  # #   tibble::tibble()
+  # df001= df00 %>% mutate(
+  #   W3 = substr(Wz, 1, 3),
+  #   W2 = substr(Wz, 1, 2)
+  # )
+  #
+
+  df002 = df001%>% tibble::tibble()%>%
     mutate(
-      w1f = ifelse(w1 == 0, "light", "heavy"),
-      w2f = ifelse(w2 == 0, "light", "heavy"),
-      w3f = ifelse(w3 == 0, "light", "heavy"),
-      w4f = ifelse(w4 == 0, "light", "heavy"),
+      w1fc = ifelse(w1 == 0, "개", "폐"),
+      w2fc = ifelse(w2 == 0, "개", "폐"),
+      w3fc = ifelse(w3 == 0, "개", "폐"),
+      w4fc = ifelse(w4 == 0, "개", "폐"),
     ) %>% as.data.frame() %>%
-    mutate_at(c("w1f", "w2f","w3f","w4f"), as.factor)
+    mutate_at(c("w1f", "w2f","w3f","w4f"), factor)
 
 
-  df1 = df0%>%
+  #
+  # df1 = df002 %>%
+  #   dplyr::mutate(
+  #     weight = dplyr::case_when(
+  #       W3 == "000" ~ 1,
+  #       W3 == "001" ~ 2,
+  #       W3 == "010" ~ 3,
+  #       W3 == "011" ~ 4,
+  #       W3 == "100" ~ 5,
+  #       W3 == "101" ~ 6,
+  #       W3 == "110" ~ 7,
+  #       W3 == "111" ~ 8)
+  #   )%>% tibble::tibble()
+
+  df2 = df002 %>%
     dplyr::mutate(
-      weigth_comb2 = dplyr::case_when(
-        W3 == "000" ~ "light-light",
-        W3 == "001" ~ "light-light",
-        W3 == "010" ~ "light-heavy",
-        W3 == "011" ~ "light-heavy",
-        W3 == "100" ~ "heavy-light",
-        W3 == "101" ~ "heavy-light",
-        W3 == "110" ~ "heavy-heavy",
-        W3 == "111" ~ "heavy-heavy")
+      weigth_c2 =  dplyr::case_when(
+        W2 == "00" ~ "개-개",
+        W2 == "01" ~ "개-폐",
+        W2 == "10" ~ "폐-개",
+        W2 == "11" ~ "폐-폐"),
+
+      weigth_cx2 =  dplyr::case_when(
+        W2 == "00" ~ "",
+        W2 == "01" ~ "X-폐",
+        W2 == "10" ~ "폐-X",
+        W2 == "11" ~ "X-폐"),
+
+      weigth_c3 = dplyr::case_when(
+        W3 == "000" ~ "개-개-개",
+        W3 == "001" ~ "개-개-폐",
+        W3 == "010" ~ "개-폐-개",
+        W3 == "011" ~ "개-폐-폐",
+        W3 == "100" ~ "폐-개-개",
+        W3 == "101" ~ "폐-개-폐",
+        W3 == "110" ~ "폐-폐-개",
+        W3 == "111" ~ "폐-폐-폐"),
+
+      weigth_cx3 = dplyr::case_when(
+        W3 == "000" ~ "개-X-개",
+        W3 == "001" ~ "개-X-폐",
+        W3 == "010" ~ "개-X-개",
+        W3 == "011" ~ "개-X-폐",
+        W3 == "100" ~ "폐-X-개",
+        W3 == "101" ~ "폐-X-폐",
+        W3 == "110" ~ "폐-X-개",
+        W3 == "111" ~ "폐-X-폐"),
+
+
+      weigth_cy3 = dplyr::case_when(
+        W3 == "000" ~ "X-개-개",
+        W3 == "001" ~ "X-개-폐",
+        W3 == "010" ~ "X-폐-개",
+        W3 == "011" ~ "X-폐-폐",
+        W3 == "100" ~ "X-개-개",
+        W3 == "101" ~ "X-개-폐",
+        W3 == "110" ~ "X-폐-개",
+        W3 == "111" ~ "X-폐-폐"),
+
+      weigth_comb3X = dplyr::case_when(
+        W3 == "000" ~ "개음절-X-개음절",
+        W3 == "001" ~ "개음절-X-폐음절",
+        W3 == "010" ~ "개음절-X-개음절",
+        W3 == "011" ~ "개음절-X-폐음절",
+        W3 == "100" ~ "폐음절-X-개음절",
+        W3 == "101" ~ "폐음절-X-폐음절",
+        W3 == "110" ~ "폐음절-X-개음절",
+        W3 == "111" ~ "폐음절-X-폐음절"),
+
+
+      weigth_c4 = dplyr::case_when(
+        Wz == "0000" ~ "개-개-개-개",
+        Wz == "0001" ~ "개-개-개-폐",
+        Wz == "0010" ~ "개-개-폐-개",
+        Wz == "0011" ~ "개-개-폐-폐",
+        Wz == "0100" ~ "개-폐-개-개",
+        Wz == "0101" ~ "개-폐-개-폐",
+        Wz == "0110" ~ "개-폐-폐-개",
+        Wz == "0111" ~ "개-폐-폐-폐",
+        Wz == "1000" ~ "폐-개-개-개",
+        Wz == "1001" ~ "폐-개-개-폐",
+        Wz == "1010" ~ "폐-개-폐-개",
+        Wz == "1011" ~ "폐-개-폐-폐",
+        Wz == "1100" ~ "폐-폐-개-개",
+        Wz == "1101" ~ "폐-폐-개-폐",
+        Wz == "1110" ~ "폐-폐-폐-개",
+        Wz == "1111" ~ "폐-폐-폐-폐"),
+
+      weigth_cx4 = dplyr::case_when(
+        Wz == "0000" ~ "개-X-X-개",
+        Wz == "0001" ~ "개-X-X-폐",
+        Wz == "0010" ~ "개-X-X-개",
+        Wz == "0011" ~ "개-X-X-폐",
+        Wz == "0100" ~ "개-X-X-개",
+        Wz == "0101" ~ "개-X-X-폐",
+        Wz == "0110" ~ "개-X-X-개",
+        Wz == "0111" ~ "개-X-X-폐",
+        Wz == "1000" ~ "폐-X-X-개",
+        Wz == "1001" ~ "폐-X-X-폐",
+        Wz == "1010" ~ "폐-X-X-개",
+        Wz == "1011" ~ "폐-X-X-폐",
+        Wz == "1100" ~ "폐-X-X-개",
+        Wz == "1101" ~ "폐-X-X-폐",
+        Wz == "1110" ~ "폐-X-X-개",
+        Wz == "1111" ~ "폐-X-X-폐"),
+
+      weigth_comb4x = dplyr::case_when(
+        Wz == "0000" ~ "개음절-X-X-개음절",
+        Wz == "0001" ~ "개음절-X-X-폐음절",
+        Wz == "0010" ~ "개음절-X-X-개음절",
+        Wz == "0011" ~ "개음절-X-X-폐음절",
+        Wz == "0100" ~ "개음절-X-X-개음절",
+        Wz == "0101" ~ "개음절-X-X-폐음절",
+        Wz == "0110" ~ "개음절-X-X-개음절",
+        Wz == "0111" ~ "개음절-X-X-폐음절",
+        Wz == "1000" ~ "폐음절-X-X-개음절",
+        Wz == "1001" ~ "폐음절-X-X-폐음절",
+        Wz == "1010" ~ "폐음절-X-X-개음절",
+        Wz == "1011" ~ "폐음절-X-X-폐음절",
+        Wz == "1100" ~ "폐음절-X-X-개음절",
+        Wz == "1101" ~ "폐음절-X-X-폐음절",
+        Wz == "1110" ~ "폐음절-X-X-개음절",
+        Wz == "1111" ~ "폐음절-X-X-폐음절"),
+
+      weigth_comb4y = dplyr::case_when(
+        Wz == "0000" ~ "X-X-개음절-개음절",
+        Wz == "0001" ~ "X-X-개음절-폐음절",
+        Wz == "0010" ~ "X-X-폐음절-개음절",
+        Wz == "0011" ~ "X-X-폐음절-폐음절",
+        Wz == "0100" ~ "X-X-개음절-개음절",
+        Wz == "0101" ~ "X-X-개음절-폐음절",
+        Wz == "0110" ~ "X-X-폐음절-개음절",
+        Wz == "0111" ~ "X-X-폐음절-폐음절",
+        Wz == "1000" ~ "X-X-개음절-개음절",
+        Wz == "1001" ~ "X-X-개음절-폐음절",
+        Wz == "1010" ~ "X-X-폐음절-개음절",
+        Wz == "1011" ~ "X-X-폐음절-폐음절",
+        Wz == "1100" ~ "X-X-개음절-개음절",
+        Wz == "1101" ~ "X-X-개음절-폐음절",
+        Wz == "1110" ~ "X-X-폐음절-개음절",
+        Wz == "1111" ~ "X-X-폐음절-폐음절")
+
+
+
     )%>% tibble::tibble()
 
-  # df1
 
-  df2 = df1%>%
-    dplyr::mutate(
-      weigth_comb3 = dplyr::case_when(
-        W3 == "000" ~ "X-light-light",
-        W3 == "001" ~ "X-light-heavy",
-        W3 == "010" ~ "X-heavy-light",
-        W3 == "011" ~ "X-heavy-heavy",
-        W3 == "100" ~ "X-light-light",
-        W3 == "101" ~ "X-light-heavy",
-        W3 == "110" ~ "X-heavy-light",
-        W3 == "111" ~ "X-heavy-heavy"),
-
-      weigth_comb4 = dplyr::case_when(
-        Wz == "0000" ~ "light-light-light-light",
-        Wz == "0001" ~ "light-light-light-heavy",
-        Wz == "0010" ~ "light-light-heavy-light",
-        Wz == "0011" ~ "light-light-heavy-heavy",
-        Wz == "0100" ~ "light-heavy-light-light",
-        Wz == "0101" ~ "light-heavy-light-heavy",
-        Wz == "0110" ~ "light-heavy-heavy-light",
-        Wz == "0111" ~ "light-heavy-heavy-heavy",
-        Wz == "1000" ~ "heavy-light-light-light",
-        Wz == "1001" ~ "heavy-light-light-heavy",
-        Wz == "1010" ~ "heavy-light-heavy-light",
-        Wz == "1011" ~ "heavy-light-heavy-heavy",
-        Wz == "1100" ~ "heavy-heavy-light-light",
-        Wz == "1101" ~ "heavy-heavy-light-heavy",
-        Wz == "1110" ~ "heavy-heavy-heavy-light",
-        Wz == "1111" ~ "heavy-heavy-heavy-heavy")
-    )%>% tibble::tibble()
-  df2
+  switch(type,
+         res1 = df0,
+         res2 = df00,
+         res3 = df1,
+         res4 = df3,
+         res = df2)
 }
-
-
 
 
 
@@ -815,7 +1027,7 @@ kge_weigth_add16 = function(df, pattern=""){
       w2 = ifelse(B3 == pattern, 0, 1),
       w3 = ifelse(C3 == pattern, 0, 1),
       w4 = ifelse(D3 == pattern, 0, 1)
-          ) %>% as.data.frame()
+    ) %>% as.data.frame()
 
   df00 = df0 %>%
     tidyr::unite(Wz , w1:w4, sep="",remove = FALSE )%>%
@@ -854,7 +1066,7 @@ kge_weigth_add16 = function(df, pattern=""){
         Wz == "1101" ~ "heavy-heavy-light-heavy",
         Wz == "1110" ~ "heavy-heavy-heavy-light",
         Wz == "1111" ~ "heavy-heavy-heavy-heavy")  )%>%
-        tibble::tibble()
+    tibble::tibble()
   df2
 
 
@@ -903,7 +1115,7 @@ all_na_zero <- function(df) {
 #데이터 대체
 replace_df = function(df, pattern="", imp=NA ){
 
-    df[df == pattern] <- imp
+  df[df == pattern] <- imp
 
   df
 }
@@ -928,19 +1140,25 @@ Replace <- function(vector, pattern=NA, imp="") {
 #필요할 때마다 성조패턴 적용 -------------
 auto_pattern = function(data,
                         type = NULL
-                        ){
+){
   if(is.null(type)){
     stop("type= 성조변형 패턴을 위한 언어타입을 써주세요,
          고유어1, 고유어2, 고유어3, 외래어2, 외래어3,외래어4,
          가성어2, 가상어3")
   }
 
-  # 고유어1  = c( "H(H)_1  --> H(H)")
-  # 고유어2  = c(pattern = "LH(H)", imp ="LH")
-  # 고유어3  = c(pattern = "LHH", imp ="LLH")
-  # 외래어2  = c(pattern = "LH_f", imp ="LH")
-  # 외래어3  = c(pattern = "LLH_f", imp ="LLH")
-  # 외래어4  = c(pattern = "LLLH_f", imp ="LLLH")
+  # 고유어11  = c(pattern = "H(H)_1", imp="H(H)+H(H)_1")
+  # 고유어12  = c(pattern = "H(H)", imp="H(H)+H(H)_1")
+  # 고유어21  = c(pattern = "LH(H)", imp ="LH+LH(H)")
+  # 고유어22 = c(pattern = "LH", imp ="LH+LH(H)")
+  # 고유어31  = c(pattern = "LHH", imp ="LLH+LHH")
+  # 고유어32  = c(pattern = "LLH", imp ="LLH+LHH")
+  # 외래어21  = c(pattern = "LH_f", imp ="LH+LH_f")
+  # 외래어22  = c(pattern = "LH", imp ="LH+LH_f")
+  # 외래어31  = c(pattern = "LLH_f", imp ="LLH+LLH_f")
+  # 외래어32  = c(pattern = "LLH", imp ="LLH+LLH_f")
+  # 외래어41  = c(pattern = "LLLH_f", imp ="LLLH+LLLH_f")
+  # 외래어42  = c(pattern = "LLLH", imp ="LLLH+LLLH_f")
   # 가상어2  = c(pattern = "", imp ="")
   # 가상어3  = c(pattern = "", imp ="")
 
@@ -968,11 +1186,79 @@ auto_pattern = function(data,
   )
 }
 
+#필요할 때마다 성조패턴 적용 -------------
 # kge_bind2 %>% filter(type =="고유어1") %>%
-            # replace_df( pattern = 고유어1$pattern, 고유어1$imp )
+# replace_df( pattern = 고유어1$pattern, 고유어1$imp )
 # kge_bind2 %>% filter(type =="고유어1") %>% auto_pattern( "고유어1" )
 # kge_bind2 %>% filter(type =="고유어2") %>% auto_pattern( "고유어2" )
-#
+#*auto_pattern2-------------
+auto_pattern2 = function(data,
+                         type = NULL
+){
+  if(is.null(type)){
+    stop("type= 성조변형 패턴을 위한 언어타입을 써주세요,
+         고유어1, 고유어2, 고유어3, 외래어2, 외래어3,외래어4,
+         가성어2, 가상어3")
+  }
+
+  고유어11  = replace_df(data, pattern = "H(H)_1", imp="H(H)+H(H)_1")
+  고유어12  = replace_df(data, pattern = "H(H)", imp="H(H)+H(H)_1")
+
+  고유어21  = replace_df(data, pattern = "LH(H)", imp ="LH+LH(H)")
+  고유어22 = replace_df(data, pattern = "LH", imp ="LH+LH(H)")
+
+  고유어31  = replace_df(data, pattern = "LHH", imp ="LLH+LHH")
+  고유어32  = replace_df(data, pattern = "LLH", imp ="LLH+LHH")
+
+  외래어21  = replace_df(data, pattern = "LH_f", imp ="LH+LH_f")
+  외래어22  = replace_df(data, pattern = "LH", imp ="LH+LH_f")
+
+  외래어31  = replace_df(data, pattern = "LLH_f", imp ="LLH+LLH_f")
+  외래어32  = replace_df(data, pattern = "LLH", imp ="LLH+LLH_f")
+
+  외래어41  = replace_df(data, pattern = "LLLH_f", imp ="LLLH+LLLH_f")
+  외래어42  = replace_df(data, pattern = "LLLH", imp ="LLLH+LLLH_f")
+  가상어2  = replace_df(data, pattern = "", imp ="")
+  가상어3  = replace_df(data, pattern = "", imp ="")
+
+  # 고유어1p  = replace_df(data, pattern = "H(H)_1", imp="H(H)")
+  # 고유어2p  = replace_df(data, pattern = "LH(H)", imp ="LH")
+  # 고유어3p  = replace_df(data, pattern = "LHH", imp ="LLH")
+  # 외래어2p  = replace_df(data, pattern = "LH_f", imp ="LH")
+  # 외래어3p  = replace_df(data, pattern = "LLH_f", imp ="LLH")
+  # 외래어4p  = replace_df(data, pattern = "LLLH_f", imp ="LLLH")
+  # 가상어2p  = replace_df(data, pattern = "", imp ="")
+  # 가상어3p  = replace_df(data, pattern = "", imp ="")
+
+
+  cat( paste("\n",type,"패턴 변경 완료 \n\n"))
+
+  switch(type,
+         고유어1a = 고유어11,
+         고유어1b = 고유어12,
+
+         고유어2a = 고유어21,
+         고유어2b = 고유어22,
+
+         고유어3a = 고유어31,
+         고유어3b = 고유어32,
+
+         외래어2a = 외래어21,
+         외래어2b = 외래어22,
+
+         외래어3a = 외래어31,
+         외래어3b = 외래어32,
+
+         외래어4a = 외래어41,
+         외래어4b = 외래어42,
+
+         가상어2 = 가상어2,
+         가상어3 = 가상어3
+  )
+}
+
+
+
 
 #accent_pattern 성조치환에 대한 패턴 정리------
 accent_pattern = rbind(
@@ -986,7 +1272,41 @@ accent_pattern = rbind(
   가상어3  = c(pattern = "", imp ="")
 ) %>% data.frame() %>% rownames_to_column("word")
 #보기
-# accent_pattern %>% tibble()
+accent_pattern %>% tibble()
+
+
+accent_pattern2 = rbind(
+  고유어11  = c(pattern = "H(H)_1", imp="H(H)+H(H)_1"),
+  고유어12  = c(pattern = "H(H)", imp="H(H)+H(H)_1"),
+  고유어21  = c(pattern = "LH(H)", imp ="LH+LH(H)"),
+  고유어22 = c(pattern = "LH", imp ="LH+LH(H)"),
+  고유어31  = c(pattern = "LHH", imp ="LLH+LHH"),
+  고유어32  = c(pattern = "LLH", imp ="LLH+LHH"),
+  외래어21  = c(pattern = "LH_f", imp ="LH+LH_f"),
+  외래어22  = c(pattern = "LH", imp ="LH+LH_f"),
+  외래어31  = c(pattern = "LLH_f", imp ="LLH+LLH_f"),
+  외래어32  = c(pattern = "LLH", imp ="LLH+LLH_f"),
+  외래어41  = c(pattern = "LLLH_f", imp ="LLLH+LLLH_f"),
+  외래어42  = c(pattern = "LLLH", imp ="LLLH+LLLH_f"),
+  가상어2  = c(pattern = "", imp =""),
+  가상어3  = c(pattern = "", imp ="")
+) %>% data.frame() %>% rownames_to_column("word") %>% tibble()
+
+accent_pattern2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # #분석자료를 데이터 프레임으로
@@ -1009,6 +1329,7 @@ kge_accent_table = function(data, Var1="a1", Var2="성조", trans = TRUE){
 
 
 #두가지 행렬데이터를 결합해주는 함수 ------
+# 관측/기대테이블과 p값을 합치기 위한 것
 combine_data <- function(observed_expected, p_value, left="", right="") {
   # Extract row and column names
   row_names <- rownames(observed_expected)
@@ -1025,7 +1346,11 @@ combine_data <- function(observed_expected, p_value, left="", right="") {
     for (j in 1:ncol(observed_expected)) {
       value <- observed_expected[i, j]
       p_value_cell <- p_value[i, j]
-      combined[i, j] <- paste0(value, left, format(p_value_cell, scientific = FALSE, digits = 5), right)
+      combined[i, j] <- paste0(value, left,
+                               format(p_value_cell,
+                                      scientific = FALSE,
+                                      digits = 5),
+                                      right)
     }
   }
 
@@ -1151,9 +1476,9 @@ calculate_chi_sig <- function(observed, type = "data", simple=FALSE) {
         cell_p_values[i, j] <- 1  # If observed is 0, set p-value to 1
       } else {
 
-      cell_expected <- expected[i, j]
-      cell_chi_square <- ((cell_observed - cell_expected)^2) / cell_expected
-      cell_p_values[i, j] <- pchisq(cell_chi_square, df = 1, lower.tail = FALSE)
+        cell_expected <- expected[i, j]
+        cell_chi_square <- ((cell_observed - cell_expected)^2) / cell_expected
+        cell_p_values[i, j] <- pchisq(cell_chi_square, df = 1, lower.tail = FALSE)
       }}
 
   }
@@ -1171,7 +1496,9 @@ calculate_chi_sig <- function(observed, type = "data", simple=FALSE) {
 
 
   #처리한 값 :관측값과
-  chi_combine  =  combine_data(observed, observed_over_expected_ratios, left = "(", right=")")
+  chi_combine  =  combine_data(observed,
+                               observed_over_expected_ratios,
+                               left = "(", right=")")
   # chi_sig =  combine_data(observed_over_expected_ratios, p_sig)
   #처리한 값
   chi_sig =  combine_data(observed_over_expected_ratios, p_sig)
@@ -1195,7 +1522,7 @@ calculate_chi_sig <- function(observed, type = "data", simple=FALSE) {
     p_sig = p_sig,
     chi_sig=chi_sig,
     chi_sig2=chi_sig2
-    )
+  )
 
   switch(type,
          res= Res,
@@ -1207,9 +1534,30 @@ calculate_chi_sig <- function(observed, type = "data", simple=FALSE) {
          p_sig = p_sig,
          data = chi_sig,
          data2 = chi_sig2
-         )
+  )
 
 }
+
+#관측 기대 테이블
+obs_exp_table = function(obs_data){
+  obs_data = as.matrix(obs_data)
+  res = calculate_chi_sig(obs_data, type="observed_over_expected_ratios")
+  res
+}
+
+p_value_cal = function(obs_data){
+  obs_data = as.matrix(obs_data)
+  res = calculate_chi_sig(obs_data, type="cell_p_values")
+  res
+}
+
+p_sig_cal = function(obs_data){
+
+  res = calculate_chi_sig(obs_data, type="p_sig")
+  res
+}
+
+
 
 # # calculate_chi_sig(data)
 # # Example data
@@ -1242,32 +1590,61 @@ calculate_chi_sig <- function(observed, type = "data", simple=FALSE) {
 
 
 
+# v2 = rcompanion::cramerV(data)
+# v2 = rcompanion::cramerVFit(data)
 
-
-#범주형 변수의 상관계수
-cramers_v <- function(data) {
-  # if (!requireNamespace("vcd", quietly = TRUE)) {
-  #   install.packages("vcd")
-  # }
-  # library(vcd)
-
+#cramers_v범주형 변수의 상관계수-----------
+cramers_v <- function(data, type="cramer", digits=3) {
   # Calculate chi-square test for independence
   chi_square_test <- chisq.test(data)
 
   # Calculate Cramer's V
   n <- sum(data)
-  num_rows <- nrow(data) - 1
-  num_cols <- ncol(data) - 1
-  phi <- sqrt(chi_square_test$statistic / n)
+  num_rows <- nrow(data) - 1   #c-1
+  num_cols <- ncol(data) - 1   #r-1
+
+  phi <- chi_square_test$statistic / n
   v <- sqrt(phi / min(num_rows, num_cols))
 
-  # Calculate p-value
-  p_value <- pchisq(chi_square_test$statistic, df = chi_square_test$parameter, lower.tail = FALSE)
+  #adjusted cramer's V
+  adjust_v = v /( sqrt(min(num_rows, num_cols)) )
 
+# Calculate p-value
+  p_value <- pchisq(chi_square_test$statistic,
+                    df = chi_square_test$parameter,
+                    lower.tail = FALSE)
+
+  #p value
+  if(p_value<0.001){
+    p_value = "< .001"
+  }else{
+    p_value = format(paste0("= ", round(p_value,3)), digits, scientific=TRUE)
+  }
+
+
+  # Calculate 95% confidence interval for Cramer's V
+  alpha <- 0.05
+  chi_critical <- qchisq(1 - alpha / 2, df = min(num_rows, num_cols))
+  lower_ci <- max(0, v - sqrt(chi_critical / n))
+  upper_ci <- min(1, v + sqrt(chi_critical / n))
+
+
+
+# result
   res = cbind.data.frame(Cramer_V = v, p.value = p_value)
+  res1 = paste0("Cramer's V = ", round(v, digits))
+  res2 = paste0("Cramer's V = ", round(v, digits), ", 95%CI[",
+                round(lower_ci, digits),", ",
+                round(upper_ci, digits),"]")
 
-  res = res
-  res
+  res3 = paste0("Adusted Cramer's V = ", round(adjust_v, digits), ", p ",
+                format(p_value, digits, scientific = TRUE))
+  switch(type,
+         data = res,
+         data1 = res1,
+         cramer = res2,
+         adjust = res3
+         )
 }
 
 # matrix(c(36, 67, 11,
@@ -1375,7 +1752,51 @@ North Gyeongsang compared to South Gyeongsang: North Gyeongsang compared to Sout
 }
 
 
+#add ratio-> accent_table---------
+add_ratio <- function(data,
+                      type="res2",
+                      # rownames="syllabic",
+                      digits=3
 
+                      ) {
+  data = as.data.frame(data)
+  # 각 열의 합을 구합니다.
+  col_sums <- colSums(data)
+  # 비율을 계산할 행렬을 생성합니다.
+  ratios <- matrix(0, nrow = nrow(data), ncol = ncol(data))
+
+  # 각 열의 합으로 나누어 비율을 계산합니다.
+  for (i in 1:ncol(data)) {
+    ratios[, i] <- data[, i] / col_sums[i]
+  }
+  #row and col names
+  colnames(ratios) = colnames(data)
+  rownames(ratios) = rownames(data)
+
+  ratios = ratios %>% as.data.frame()
+
+  # 결과를 반환합니다.
+  res1 = round(ratios, digits)
+  res2 = round(ratios, digits)*100
+
+
+  switch(type,
+         res1 = res1,
+         res2 = res2
+  )
+}
+
+# add_ratio(data)
+# add_ratio(data, "res1")
+# add_ratio(data, "res2")
+# # 테스트를 위한 데이터
+# data <- matrix(c(26, 35, 36, 49,
+#                  62, 35, 108, 82,
+#                  11, 44, 1, 46),
+#                nrow = 4, byrow = TRUE,
+#                dimnames = list(c("공명음", "마찰음", "유기음_경음", "평파열음_평파찰음"),
+#                                c("H", "H(H)+H(H)_1", "L")))
+# data
 
 # #
 # matrix(c(36, 67, 11,
@@ -1410,7 +1831,10 @@ North Gyeongsang compared to South Gyeongsang: North Gyeongsang compared to Sout
 
 
 
-
+add_ratio_df= function(res){
+  res_df_RES =  combine_data(res, add_ratio(res),"(", "%)")
+  res_df_RES
+}
 
 
 
@@ -1419,18 +1843,7 @@ North Gyeongsang compared to South Gyeongsang: North Gyeongsang compared to Sout
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-#분석자료를 데이터 프레임으로-----
+#*** accent_table분석자료를 데이터 프레임으로-----
 accent_table = function(data, #table data
                         cols = "a1",
                         rows = "성조",
@@ -1438,29 +1851,53 @@ accent_table = function(data, #table data
                         trans = TRUE,
                         cex = 1.3,
                         color = TRUE,
-                        ylab = "onset", xlab="accent",
+                        ylab = "onset",
+                        xlab="accent",
                         sub = NULL,
                         plot= FALSE,
-                        type = "res"){
+                        type = "res",
+                        raw=FALSE){
+
+  if(raw){
+    data =  data %>%
+      dplyr::select(all_of(cols), all_of(rows)) %>%
+      table()
+
+  }else{
+    data =  data
+  }
+
+
+
 
   res = data  %>% as.matrix() %>%data.frame() %>%
     pivot_wider(names_from = rows, values_from = "Freq") %>%
     rename(accent = cols) %>% tibble::column_to_rownames("accent")
 
+
+
+  # 데이터를 데이터 프레임으로 반들기
   res_df = data  %>% as.matrix() %>%data.frame()
 
+
+  #비율을 생성하여 행렬화
+  res_ratio = add_ratio(res)
+
+  #퍼센트 붙이기
+  res_df_RES =  combine_data(res, add_ratio(res_ratio),"(", "%)")
+
   if(plot){
-  res_mosaicplot = res %>%
-    mosaicplot(color = color, ylab = ylab, xlab=xlab,
-               cex.axis = cex,
-               main = paste("Contigency Table of var(", title,")"),
-               sub= sub)
+    res_mosaicplot = res %>%
+      mosaicplot(color = color, ylab = ylab, xlab=xlab,
+                 cex.axis = cex,
+                 main = paste("Contigency Table of var(", title,")"),
+                 sub= sub)
   }else{
     res_mosaicplot=NULL
   }
   # sub="Friendly, M. (1994). Mosaic displays for multi-way contingency tables"
 
-  res_all = list(res, res_df, res_mosaicplot)
+  # res_all = list(res, res_df_RES, res_mosaicplot)
 
   if(trans){res= res %>% t()
 
@@ -1469,24 +1906,34 @@ accent_table = function(data, #table data
 
   switch(type,
          res = res,
-         df = res_df,
+         res_df = res_df,
+         ratio = res_df_RES,
          g = res_mosaicplot,
          all = res_all )
 }
 
 
 # observed table result ---------------
-# observed table result
-# observed table result -
-obs_table = function(data, typesel = NULL, cex=1.3,plot=TRUE){
-  data %>% filter(type==typesel) %>%
+obs_table = function(data, typesel = NULL, cex=1.3, plot=TRUE, type="res"){
+
+  res= data %>% filter(type==typesel) %>%
     auto_pattern(typesel)%>%
     select(성조, speaker) %>% table() %>%
-    accent_table("speaker", "성조", typesel, cex=cex,  plot = plot)
+    accent_table("speaker", "성조", typesel, cex=cex,  plot = plot, type = type)
+
+  res
 }
 # kge_bind2a %>% obs_table("고유어1")
 
+obs_table_ratio = function(data, typesel = NULL, cex=1.3, plot=TRUE, type="ratio"){
 
+  res= data %>% filter(type==typesel) %>%
+    auto_pattern(typesel)%>%
+    select(성조, speaker) %>% table() %>%
+    accent_table("speaker", "성조", typesel, cex=cex,  plot = plot, type = type)
+
+  res
+}
 
 
 
@@ -1502,52 +1949,174 @@ obs_table = function(data, typesel = NULL, cex=1.3,plot=TRUE){
 #   accent_table("speaker", "성조", "고유어1", plot=FALSE)
 
 
-# chisq table observed/Expected table
-kge_chisq_table = function(data,
+#비율을 추가한 후에 합을 넣는 함수
+add_sum = function(dataset,
+                   v1 = "a1",
+                   v2 = "성조",
+                   raw = FALSE,
+                   add_ratio = TRUE,
+                   plot = FALSE,
+                   color = TRUE,
+                   ylab = "onset",
+                   xlab = "speaker",
+                   cex = 1.2,
+                   title = NULL,
+                   type="df"
+                   ){
+
+
+  if(raw){
+  data =  dataset %>%
+    dplyr::select(all_of(v1), all_of(v2)) %>%
+    table()
+  }else{
+  data =  dataset
+  }
+
+  # 최종결과 에 포함을 margn sum
+  data_margin0 = data %>% addmargins()
+
+  data_rowsum0 = data %>%  apply(., MARGIN = 2 , FUN = sum)
+  data_rowsum_df = data %>%  rbind(SUM=apply(., MARGIN = 2 , FUN = sum) )
+  data_colsum = data_rowsum_df %>% apply(., MARGIN = 1 , FUN = sum)
+
+  g = patternGraph(data, tolong = T, type= "g")
+
+#데이터에 비율을 넣는 경우와 안넣는 경우
+  if(add_ratio){
+  #데이터 게산
+  data_margin = data  %>% add_ratio_df()
+  }else{
+    data_margin = data
+  }
+
+  #모자이크 픞롯을 넣기
+  if(plot){
+    res_mosaicplot = data %>% t() %>%
+      mosaicplot(color = color, ylab = ylab, xlab=xlab,
+                 cex.axis = cex,
+                 main = paste("Contigency Table of var ", title,""))
+  }else{
+    res_mosaicplot=NULL
+  }
+
+  #비율계산과 데이터 margin sum
+  data_margin = cbind(rbind(data_margin, SUM=data_rowsum0 ), SUM=data_colsum )
+  res1 = data_margin
+
+  res2 = list(data_margin, g)
+
+
+  switch(type,
+         a11 = res2,
+         df = res1,
+         res = res1
+         )
+
+}
+
+
+
+
+
+#** kge_chisq_table chisq table observed/Expected table--------
+kge_chisq_table = function(dataset,
                            v1="a1",
                            v2="성조",
                            title ="Table",
                            type = "res2",
-                           digits = 3,yadd=0.1,ncol=NULL,
+                           digits = 3,
+                           yadd=0.4,
+                           Ncol=NULL,
                            trans = FALSE,
                            simple= FALSE, #유의성 종류
-                           ko = FALSE)  #패턴그래프
+                           ko = TRUE,
+                           simulate.p.value=FALSE,
+                           correct= FALSE,
+                           size_bartext=5,
+                           strip_size = 16,
+                           axis_size = 16,
+                           text_size = 13,
+                           cramer="adjust"
+                           )  #패턴그래프
 {
 
-  data =  data %>%
+  data =  dataset %>%
     dplyr::select(all_of(v1), all_of(v2)) %>%
     table()
-  # 최종결과 에 포함
-  data_margin = data %>% addmargins() %>%
-    accent_table( v1, v2, trans = trans)
-  #
+
+  # 최종결과 에 포함을 margn sum
+  data_margin0 = data %>% addmargins()
+
+  data_rowsum0 = data %>%  apply(., MARGIN = 2 , FUN = sum)
+  data_rowsum_df = data %>%  rbind(SUM=apply(., MARGIN = 2 , FUN = sum) )
+  data_colsum = data_rowsum_df %>% apply(., MARGIN = 1 , FUN = sum)
+
+#데이터 게산
+  data_margin = data  %>%
+    accent_table( v1, v2, trans = trans, type = "ratio")
+
+  #비율계산과 데이터 margin sum
+  data_margin = cbind(
+                    rbind(data_margin, SUM=data_rowsum0 ),
+                    SUM=data_colsum )
+#크래머 상관
+ cramer_cor = cramers_v(data, type = cramer)
+ cramer_cor_v = cramers_v(data, type = "cramer", digit = digits) #복소서에 사용
+ cramer_cor_v_table = cramers_v(data, type = "data1", digits = 2)
+
+  # data_margin = cbind(data_margin, data_margin0[, ncol(data_margin0)])
+
   #chisq.test
   Onset_or_Coda_Accent_Contingency_table <- data
-  res = chisq.test(Onset_or_Coda_Accent_Contingency_table)
+#카이제곱 데이터프리엠 변형
   res_df = chisq.test(data)%>% broom::tidy()
-  res_report = chisq.test(data)%>% report::report()
 
-  chi_mag = paste0(" [chisq = ",round(res$statistic, digits),
+  #카이제곱 테스트
+  res = chisq.test(Onset_or_Coda_Accent_Contingency_table,
+                   correct = correct,
+                   simulate.p.value = simulate.p.value)
+# 판단용 통계치
+  chi2 = res$statistic
+  p_vlaue_chi = res$p.value
+  # df_chi = res$parameter
+
+  msg_sig_chi = ifelse(p_vlaue_chi < 0.05,"significant", "not significant")
+  # msg_p_chi = ifelse( p_vlaue_chi < 0.01, "< .001",
+  #                     paste0("= ",
+  #                            format(p_vlaue_chi, digits, scientific=TRUE) ))
+  # res_report = chisq.test(data)%>% report::report()
+
+
+  chi_mag = paste0(" [chisq = ",round(res$statistic, 2),
                    ", df = ",res$parameter,
-                   ", p = ", format_number(res$p.value, digits),"]" )
+                   ", p = ", format_number(res$p.value, 2),"]" )
   # res$statistic
   # res$parameter
   # res$p.value
+  #카이제곱 레포트 만들기
+  v1_input = ifelse(v1=="a1", "Onset",
+                          ifelse(grepl("^w", v1), "Weight",
+                                ifelse(v1=="a3", "Coda", v1)))
+
+  v2_input = ifelse(v2=="성조", "Accent", v1)
+
+
+  res_report = paste0("The Pearson's Chi-squared test of independence between ",
+                      v1_input," and ",v2_input,
+                      " suggests that the effect is statistically ", msg_sig_chi,
+                      chi_mag,
+                      ".; ",
+                      cramer_cor_v, ".")
+
+
 
   if(nrow(data) != 1){
     chi_table = (res$observed / res$expected)%>% as.data.frame() %>%#
       tidyr::pivot_wider(names_from = v2, values_from = Freq) %>%
       tibble::column_to_rownames(v1) %>%
       Round(digits)
-
-
-    # g = chi_table %>%  patternGraph()
-
-
-
   }else{
-
-    # chi_table = (res$observed / res$expected)
     chi_table =
       rbind(
         observed = data %>%
@@ -1559,14 +2128,24 @@ kge_chisq_table = function(data,
     # g= NULL
   }
   #observer/Expected 에 유의성 표시
-  chi_table_sig = calculate_chi_sig(data, simple = simple)
-  chi_table_sig2 = perform_chi_square_test(data, simple = simple, type = "data2")
+  chi_table_sig = format(calculate_chi_sig(data, simple = simple), 3)
+  chi_table_sig2 = perform_chi_square_test(data,
+                                           simple = simple,
+                                           type = "data2")
 
-  #유의성표시된 것으로 변경
-  chi_table_md = chi_table_sig %>%
-    markdown_table(caption = paste0(title,chi_mag),
+  ###마크다운   유의성표시된 것으로 변경----
+  chi_table_md0 = chi_table_sig %>%data.frame() %>%
+    rownames_to_column("syllable-accent")
+  #열이름 재설정
+    colnames(chi_table_md0) <- c("syllable-accent",colnames(chi_table_sig))
+
+  chi_table_md = chi_table_md0 %>%
+    markdown_table(caption = paste0(title, chi_mag,"; ",
+                                    cramer_cor_v_table,"."),
                    digits = digits,
                    general = NULL)
+
+  cat("\n\nNOTE: ***: p < .001, **: p < .01, *: p < .05\n\n ")
 
 
   # 결과를 정리하여 나타내는 값들
@@ -1578,31 +2157,75 @@ kge_chisq_table = function(data,
                 chi_table = chi_table)
 
 
-  #패턴 그래프 ko적용
+  #패턴 그래프 ko적용--raq =TRUE, type="g"
+  data_graph = data  %>% accent_table( v2, v1, type = "res")
+
+
+ # 교차표 contigency table
+  contigency_table_md0 = data_margin %>% data.frame() %>%
+    rownames_to_column("syllable-accent")
+ #열이름 재설정
+    colnames(contigency_table_md0) <- c("syllable-accent",
+                                        colnames(data_graph),
+                                        "SUM")
+
+  contigency_table_md =  contigency_table_md0 %>%
+    markdown_table(caption = paste0(title," Contingency table"),
+                   general = NULL)
+
+
   if(ko){
-    graph = patternGraph1_ko(chi_table, raw = FALSE, yadd = yadd, ncol = ncol)
+    graph = patternGraph_obs_exp_ko(data_graph,
+                                    raw = TRUE,
+                                    size_bartext=size_bartext,
+                                    strip_size = strip_size,
+                                    axis_size = axis_size,
+                                    text_size = text_size,
+                                    yadd = yadd,
+                                    Ncol = Ncol)
   }else{
-    graph = patternGraph1(chi_table, raw = FALSE, yadd = yadd, ncol = ncol)
+    graph = patternGraph_obs_exp(data_graph,
+                                 raw = TRUE,
+                                 yadd = yadd,
+                                 size_bartext=size_bartext,
+                                 strip_size = strip_size,
+                                 axis_size = axis_size,
+                                 text_size = text_size,
+                                 Ncol = Ncol)
   }
 
 
-  #최종울력
+  #최종 출력
   result1 = list(
+    # data_rowsum0,data_colsum,
     # msg=msg,
-    crosstable = data_margin,
-    data_margin %>%
-      markdown_table(caption = paste0(title," Contingency table"),
-                     general = NULL),
-    chisq_test_overall = res,
+    data_graph = data_graph,
+    contigency_table_margin = data_margin0,
+    contigency_table = data_margin,
+
+    # contigency_table_md = data_margin %>% data.frame() %>%
+    #   rownames_to_column("syllable-accent") %>%
+    #   markdown_table(caption = paste0(title," Contingency table"),
+    #                  general = NULL),
+
+
+
 
     # chi_df = res_df,
-    chisq_report_overall = res_report,
+
+    CRAMER_V.adusted = cramer_cor,
+    CRAMER_V = cramer_cor_v,
 
     chi_table = chi_table ,
     chi_table_sig_each_variable = chi_table_sig,
     chi_table_sig_each_variable2 = chi_table_sig2,
     g = graph,
-    chi_table_md)
+
+    contigency_table_md = contigency_table_md,
+    chi_table_md = chi_table_md,
+    chisq_test_overall = res,
+    chisq_report_overall = res_report
+    )
 
 
 
@@ -1623,18 +2246,31 @@ kge_chisq_table = function(data,
   switch(type,
          ct = data,
          df = data.frame(data),
+         data_graph = data_graph,
          margin = data_margin,
          chisq_test = res,
          chisq_df = res_df,
          chisq_report = res_report,
-         chitable = chi_table,
+         chi_table = chi_table,
+
+         contigency_table_margin = contigency_table_margin,
+         contigency_table = contigency_table,
+         chi_table_sig_each_variable=chi_table_sig_each_variable,
+         chi_table_sig_each_variable2=chi_table_sig_each_variable2,
+         chisq_test_overall=chisq_test_overall,
+         chisq_report_overal=chisq_report_overal,
+         CRAMER_V=CRAMER_V,
+         CRAMER_V.adusted=CRAMER_V.adusted,
+         contigency_table_md= contigency_table_md,
+         chi_table_md=chi_table_md,
+         g = graph,
          res1 = result,
          res2 = result1,
          res3 = result2)
 }
 
 
- # chisq table observed/Expected table
+# chisq table observed/Expected table
 
 
 # chisq table observed/Expected table
@@ -1772,19 +2408,26 @@ kge_chisq_table = function(data,
 
 
 patternGraph = function(data,size=4,
-                        strip=14,
+                        strip = 14,
                         text = 12,
-                        axis= 14,
-                        hjust=-0.4,
+                        axis = 16,
+                        hjust = -0.4,
                         yadd = 10,
-                        type="g",
-                        show=FALSE,
-                        tolong= FALSE
+                        type = "g",
+                        xlab = "성조형",
+                        ylab="빈도",
+                        show = TRUE,
+                        tolong = TRUE
 ){
+
+
   if(tolong){
-    data1 = data %>% data.frame %>%
-      rownames_to_column("accent") %>%
-      pivot_longer(names_to = "speaker", values_to = "freq", cols=2:5)
+    data1 = data %>% data.frame() %>%
+      rownames_to_column("accent")
+
+    data1 =  data1%>% pivot_longer(names_to = "speaker",
+                                   values_to = "freq",
+                                   cols=2:ncol(data1))
   }else{
     data1 = data
   }
@@ -1795,9 +2438,10 @@ patternGraph = function(data,size=4,
       ggplot(aes(x = accent, y = freq))+
       geom_bar(stat = "identity", aes( fill = accent),
                position = "dodge", show.legend = FALSE)+
-      geom_text(aes(label = freq), hjust =  hjust, size = size)+
+      geom_text(aes(label = data1$freq), hjust =  hjust, size = size)+
       coord_flip()+
       ylim(0, max(data1$freq)+ yadd)+
+      labs(x = xlab, y= ylab)+
       theme_bw()+
       theme(axis.text = element_text(size= text),
             axis.title = element_text(size= axis),
@@ -1815,6 +2459,7 @@ patternGraph = function(data,size=4,
       # geom_text(aes(label = freq), hjust =  hjust, size = size)+
       coord_flip()+
       ylim(0, max(data1$freq)+ yadd)+
+      labs(x = xlab, y= ylab)+
       theme_bw()+
       theme(axis.text = element_text(size= text),
             axis.title = element_text(size= axis),
@@ -1824,43 +2469,18 @@ patternGraph = function(data,size=4,
       # facet_wrap(~ accent)
       facet_wrap(~ speaker)
   }
+  res= list(g, data1)
+
   switch(type,
          g = g,
-         data = data1)
+         data = data1,
+         all=res
+         )
 }
 
 
-
-#longdata transfomation
-long_df = function(data, names_to = "speaker",
-                   values_to = "freq",
-                   cols = 2:ncol(data1),
-                   rowname ="accent"){
-
-  # colnames0 = colnames(data)
-  data1 = data %>% data.frame %>%
-    rownames_to_column("accent")
-
-  data2 <- data1%>%
-    pivot_longer(names_to = "speaker",
-                 values_to = "freq",
-                 cols=cols)
-  data2
-
-}
-
-#longdata transfomation
-# long_df = function(data, cols=2:5){
-#   data1 = data %>% data.frame %>%
-#     rownames_to_column("accent") %>%
-#     pivot_longer(names_to = "speaker",
-#                  values_to = "freq",
-#                  cols=cols)
-#   data1
-# }
-
-#피험자 정보 데이터와결합
-combind_person= function(data){
+# 피험자 정보 데이터와결합
+combind_person = function(data){
   load(file =" Kge_person.RData")
 
   data1=  data %>%long_df() %>%
@@ -1874,19 +2494,34 @@ combind_person= function(data){
 }
 
 
-### 음절별 성조의 패턴
+#피험자 정보 데이터와결합
+combind_person2 = function(data,rowname="speaker", names_to="accent" ){
+  load(file =" Kge_person.RData")
+
+  data1=  data %>%
+    long_df(rowname=rowname, names_to=names_to) %>%
+    inner_join(Kge_person, by="speaker" ) %>%
+    tidyr::unite(speaker , c(speaker, age, area))%>%
+    arrange(speaker) %>%
+    dplyr::select( name, gender,speaker,accent, freq)
+
+  data1
+
+}
+
+
 ### 음절별 성조의 패턴calculate_chi_sig
 
 ### 음절별 성조의 패턴 그래프 --------
 patternGraph1 = function(data,
                          type="data",
-                         raw=TRUE,
-                         ncol=NULL,
-                         yadd =0.09,
+                         raw = TRUE,
+                         Ncol = NULL,
+                         yadd = 0.09,
                          strip_size = 16,
                          axis_size = 15,
                          text_size = 13
-                         ){
+){
 
   if(raw){
     data1 <- data
@@ -1896,8 +2531,8 @@ patternGraph1 = function(data,
                    values_to = 'ratio',
                    cols = 2: (ncol(data1$chi_table)+1) )
 
-    p_sig0 = calculate_chi_sig(data, type="p_sig")
-    data_long = cbind.data.frame(data_long, p_sig0)
+    # p_sig0 = calculate_chi_sig(data, type="p_sig")
+    # data_long = cbind.data.frame(data_long, p_sig0)
 
 
 
@@ -1905,7 +2540,7 @@ patternGraph1 = function(data,
       geom_bar(stat = "identity", aes( fill = accent),
                position = "dodge", show.legend = FALSE)+
       geom_hline(yintercept = 1, linetype=2, color="gray80")+
-      geom_text(aes(label =  paste(round(ratio,2) , p_sig )), hjust = -0.1, size = 4)+
+      geom_text(aes(label =  round(ratio,2) ), hjust = -0.1, size = 4)+
       ylim(0,max(data_long$ratio)+ yadd)+
       coord_flip()+
       theme_bw()+
@@ -1922,17 +2557,20 @@ patternGraph1 = function(data,
     data_long <- data1 %>% as.data.frame() %>%
       rownames_to_column("syllabic") %>%
       pivot_longer(names_to = "accent", values_to = 'ratio',
-                   cols=2: (ncol(data1)+1) )
+                   cols=2:(ncol(data1)+1) )
 
-    p_sig0 = calculate_chi_sig(data, type="p_sig")
-    data_long = cbind.data.frame(data_long, p_sig0)
+    # p_sig0 = calculate_chi_sig(data, type="p_sig")%>%
+    #   rownames_to_column("syllabic") %>%
+    #   pivot_longer(names_to = "accent", values_to = 'ratio',
+    #                cols=2: (ncol(data1)+1) )
+    # data_long = cbind.data.frame(data_long, p_sig0)
 
 
     g = data_long%>% ggplot(aes(x = accent, y = ratio))+
       geom_bar(stat = "identity", aes( fill = accent),
                position = "dodge", show.legend = FALSE)+
       geom_hline(yintercept = 1, linetype=2, color="gray80")+
-      geom_text(aes(label =  paste(round(ratio,2), p_sig )), hjust = -0.1, size = 4)+
+      geom_text(aes(label =  round(ratio,2)), hjust = -0.1, size = 4)+
       ylim(0,max(data_long$ratio)+ yadd)+
       coord_flip()+
       theme_bw()+
@@ -1941,7 +2579,7 @@ patternGraph1 = function(data,
             strip.text = element_text(size= strip_size)
       )+
       scale_fill_grey(start = 0, end = 0.7) +
-      facet_wrap(~ syllabic , ncol = ncol)
+      facet_wrap(~ syllabic , ncol = Ncol)
 
 
   }
@@ -1955,6 +2593,38 @@ patternGraph1 = function(data,
 
 
 
+#longdata transfomation
+long_df = function(data,
+                   names_to = "speaker",
+                   values_to = "freq",
+                   cols = 2:ncol(data1),
+                   rowname ="accent"){
+
+  colName = colnames(data)
+  rowName = rownames(data) #accent
+  # colnames0 = colnames(data)
+  data1 = data %>% data.frame() %>%
+    rownames_to_column(rowname)
+
+  colnames(data1)= c(rowname,colName)
+
+  data2 <- data1%>%
+    pivot_longer(names_to = names_to,
+                 values_to = values_to,
+                 cols=cols)
+  data2
+
+}
+
+#longdata transfomation
+# long_df = function(data, cols=2:5){
+#   data1 = data %>% data.frame %>%
+#     rownames_to_column("accent") %>%
+#     pivot_longer(names_to = "speaker",
+#                  values_to = "freq",
+#                  cols=cols)
+#   data1
+# }
 
 
 
@@ -1962,12 +2632,12 @@ patternGraph1 = function(data,
 patternGraph1_ko = function(data,
                             type="data",
                             raw=TRUE,
-                            ncol=NULL,
+                            Ncol=NULL,
                             yadd =0.09,
                             strip_size = 16,
                             axis_size = 15,
                             text_size = 13
-                            ){
+){
 
   if(raw){
     data1 <- data
@@ -1999,7 +2669,7 @@ patternGraph1_ko = function(data,
           strip.text = element_text(size= strip_size)
     )+
     scale_fill_grey(start = 0, end = 0.7) +
-    facet_wrap(~ syllabic , ncol = ncol)
+    facet_wrap(~ syllabic , ncol = Ncol)
 
 
   res = list(data, data_long, g)
@@ -2007,6 +2677,186 @@ patternGraph1_ko = function(data,
 
   switch(type, all= res, data=res1)
 }
+
+
+
+
+
+#patternGraph_obs_exp ----
+patternGraph_obs_exp = function(data,
+                                raw = TRUE,
+                                Ncol = NULL,
+                                yadd = 0.3,
+                                # values_to = NULL,
+                                # names_to =NULL,
+                                strip_size = 16,
+                                axis_size = 15,
+                                text_size = 13,
+                                type="g"
+                                ){
+
+  # g = patternGraph1(data, raw = FALSE)
+
+  data1 <- data
+
+  data_long0 <- data1 %>% as.data.frame() %>%
+    rownames_to_column("syllabic") %>%
+    pivot_longer(names_to = "accent", values_to = "ratio",
+                 cols=2: (ncol(data1)+1) )
+
+  data_long_df <- data1 %>%
+    long_df(names_to = "accent", values_to="Freq",
+            rowname = "syllabic")
+
+  data_long_oe <- data1 %>%obs_exp_table() %>%
+    long_df(names_to = "accent", values_to="ratio",
+            rowname = "syllabic") %>%
+    jjstat::Round()
+
+  data_long_sig =  data1%>% p_sig_cal()%>%
+    long_df(names_to = "accent", values_to="star",
+            rowname = "syllabic")
+
+  data_long_p =  data1%>% p_value_cal()%>%
+    long_df(names_to = "accent", values_to="p.value",
+            rowname = "syllabic")
+
+
+
+  if(raw){
+    #contigency table인 경우
+  data_long = bind_cols(data_long_oe, data_long_sig[, 3]) %>%
+    tidyr::unite(Sig, ratio, star, remove = FALSE, sep = "")
+
+  g0 = data_long  %>% ggplot(aes(x = accent, y = ratio))
+
+  }else{
+    #관측/기대 표가 들어 온경우  kge_chisq_table에서 사용시
+    data_long = bind_cols(data_long_df, data_long_sig[, 3]) %>%
+      tidyr::unite(Sig, Freq, star, remove = FALSE, sep = "")
+
+    g0 = data_long  %>% ggplot(aes(x = accent, y = Freq))
+  }
+
+
+
+
+ g = g0 + geom_bar(stat = "identity", aes( fill = accent),
+             position = "dodge", show.legend = FALSE)+
+    geom_hline(yintercept = 1, linetype=2, color="gray80")+
+    # geom_text(aes(label =  paste(round(ratio,2), star ) ),
+    geom_text(aes(label =  Sig ),
+                  hjust = -0.1, size = 4)+
+    ylim(0,max(data_long_oe[, 3])+ yadd)+
+    coord_flip()+
+    theme_bw()+
+    theme(axis.text = element_text(size= text_size),
+          axis.title = element_text(size= axis_size),
+          strip.text = element_text(size= strip_size)
+    )+
+    scale_fill_grey(start = 0, end = 0.7) +
+    facet_wrap(~ syllabic , ncol = Ncol)
+
+  res =  list(g, data_long,data_long_oe, data_long_sig, data_long_p)
+  g= g
+
+  switch(type, res = res, g=g)
+}
+
+
+
+
+#patternGraph_obs_exp ----
+patternGraph_obs_exp_ko = function(data,
+                                raw = TRUE,
+                                Ncol = NULL,
+                                yadd = 0.5,
+                                # values_to = NULL,
+                                # names_to =NULL,
+                                strip_size = 16,
+                                axis_size = 16,
+                                text_size = 13,
+                                size_bartext = 5,
+                                type="g"
+){
+
+  # g = patternGraph1(data, raw = FALSE)
+
+  data1 <- data
+
+  data_long0 <- data1 %>% as.data.frame() %>%
+    rownames_to_column("syllabic") %>%
+    pivot_longer(
+                 # names_to = "accent",
+                 # values_to = "ratio",
+      names_to = "성조형",values_to = '관측기대비율',
+                 cols=2: (ncol(data1)+1) )
+
+  data_long_df <- data1 %>%
+    long_df(
+      # names_to = "accent", values_to="Freq",
+      names_to = "성조형",values_to = '관측기대비율',
+      rowname = "syllabic")%>%
+    jjstat::Round()
+
+  data_long_oe <- data1 %>%obs_exp_table() %>%
+    long_df(
+      # names_to = "accent", values_to="ratio",
+      names_to = "성조형",values_to = '관측기대비율',
+            rowname = "syllabic") %>%
+    jjstat::Round()
+
+  data_long_sig =  data1%>% p_sig_cal()%>%
+    long_df(
+      # names_to = "accent", values_to="star",
+      names_to = "성조형",values_to = 'star',
+            rowname = "syllabic")
+
+  data_long_p =  data1%>% p_value_cal()%>%
+    long_df(
+      # names_to = "accent", values_to="p.value",
+      names_to = "성조형",values_to = 'p.value',
+      rowname = "syllabic")
+
+  if(raw){
+    #contigency table인 경우
+    data_long = bind_cols(data_long_oe, data_long_sig[, 3]) %>%
+      tidyr::unite(Sig, 관측기대비율, star, remove = FALSE, sep = "")
+
+    g0 = data_long  %>% ggplot(aes(x = 성조형, y = 관측기대비율))
+
+  }else{
+    #관측/기대 표가 들어 온경우  kge_chisq_table에서 사용시
+    data_long = bind_cols(data_long_df, data_long_sig[, 3]) %>%
+      tidyr::unite(Sig, 관측기대비율, star, remove = FALSE, sep = "")
+
+    g0 = data_long  %>% ggplot(aes(x = 성조형, y = 관측기대비율))
+  }
+
+
+
+
+  g = g0 +geom_bar(stat = "identity", aes( fill = 성조형),
+             position = "dodge", show.legend = FALSE)+
+    geom_hline(yintercept = 1, linetype=2, color="gray80")+
+    geom_text(aes(label =  Sig ),
+              hjust = -0.1, size = size_bartext)+
+    ylim(0,max(data_long_oe[, 3])+ yadd)+
+    coord_flip()+
+    theme_bw()+
+    theme(axis.text = element_text(size= text_size),
+          axis.title = element_text(size= axis_size),
+          strip.text = element_text(size= strip_size)
+    )+
+    scale_fill_grey(start = 0, end = 0.7) +
+    facet_wrap(~ syllabic , ncol = Ncol)
+
+ res =  list(g, data_long,data_long_oe, data_long_sig, data_long_p)
+ g= g
+
+ switch(type, res = res, g=g)
+}
+
 
 #
 #
@@ -2040,10 +2890,106 @@ patternGraph1_ko = function(data,
 # aaa%>% patternGraph1()
 
 
+#patternGraph_obs_exp ----
+patternGraph2 = function(data, type="g",
+                         raw = TRUE,
+                         Ncol = NULL,
+                         yadd = 0.45,
+                         # values_to = NULL,
+                         # names_to =NULL,
+                         strip_size = 16,
+                         axis_size = 16,
+                         text_size = 14,
+                         size_bartext=5
+
+){
+
+  # g = patternGraph1(data, raw = FALSE)
+
+  data1 <- data$data_graph %>% t()
+
+  data_long0 <- data1 %>% as.data.frame() %>%
+    rownames_to_column("성조형") %>%
+    pivot_longer(
+      # names_to = "성조형",
+      # values_to = "ratio",
+      names_to = "음절",values_to = '관측기대비율',
+      cols=2: (ncol(data1)+1) )
+
+  data_long_df <- data1 %>%
+    long_df(
+      # names_to = "성조형", values_to="Freq",
+      names_to = "음절",values_to = '관측기대비율',
+      rowname = "성조형")%>%
+    jjstat::Round()
+
+  data_long_oe <- data1 %>%obs_exp_table() %>%
+    long_df(
+      # names_to = "성조형", values_to="ratio",
+      names_to = "음절",values_to = '관측기대비율',
+      rowname = "성조형") %>%
+    jjstat::Round()
+
+  data_long_sig =  data1%>% p_sig_cal()%>%
+    long_df(
+      # names_to = "성조형", values_to="star",
+      names_to = "음절",values_to = 'star',
+      rowname = "성조형")
+
+  data_long_p =  data1%>% p_value_cal()%>%
+    long_df(
+      # names_to = "성조형", values_to="p.value",
+      names_to = "음절",values_to = 'p.value',
+      rowname = "성조형")
+
+  if(raw){
+    #contigency table인 경우
+    data_long = bind_cols(data_long_oe, data_long_sig[, 3]) %>%
+      tidyr::unite(Sig, 관측기대비율, star, remove = FALSE, sep = "")
+
+    g0 = data_long  %>% ggplot(aes(x = 음절, y = 관측기대비율))
+
+  }else{
+    #관측/기대 표가 들어 온경우  kge_chisq_table에서 사용시
+    data_long = bind_cols(data_long_df, data_long_sig[, 3]) %>%
+      tidyr::unite(Sig, 관측기대비율, star, remove = FALSE, sep = "")
+
+    g0 = data_long  %>% ggplot(aes(x = 음절, y = 관측기대비율))
+  }
+
+
+
+
+  g = g0 +geom_bar(stat = "identity", aes( fill = 음절),
+                   position = "dodge", show.legend = FALSE)+
+    geom_hline(yintercept = 1, linetype=2, color="gray80")+
+    geom_text(aes(label =  Sig ),
+              hjust = -0.1, size = size_bartext)+
+    ylim(0,max(data_long_oe[, 3])+ yadd)+
+    coord_flip()+
+    theme_bw()+
+    theme(
+          axis.text.y =  element_text(size= text_size + 2),
+          axis.text.x =  element_text(size= text_size - 1.5),
+          axis.title = element_text(size= axis_size),
+          strip.text = element_text(size= strip_size)
+    )+
+    scale_fill_grey(start = 0, end = 0.7) +
+    facet_wrap(~ 성조형 , ncol = Ncol)
+
+  res =  list(g, data_long,data_long_oe, data_long_sig, data_long_p)
+  g= g
+
+  switch(type,
+         res = res,
+         all = res,
+         g=g)
+}
+
 
 
 ### 음절별 성조의 패턴 그래프 --------
-patternGraph2 = function(data,
+patternGraph2t = function(data,
                          type="data",
                          raw=TRUE,
                          ncol=NULL,
@@ -2062,6 +3008,9 @@ patternGraph2 = function(data,
         pivot_longer(names_to = "성조형",
                      values_to = '관측기대비율',
                      cols = 2: (ncol(data1$chi_table)+1) )
+
+
+
     }else{
       data1 <- data
 
@@ -2069,6 +3018,9 @@ patternGraph2 = function(data,
         rownames_to_column("음절") %>%
         pivot_longer(names_to = "성조형", values_to = '관측기대비율',
                      cols=2: (ncol(data1)+1) )
+
+
+
 
     }
 
@@ -2091,22 +3043,22 @@ patternGraph2 = function(data,
 
 
   }else{
-  if(raw){
-    data1 <- data
-    data_long <- data1$chi_table %>%
-      rownames_to_column("syllabic") %>%
-       pivot_longer(names_to = "accent",
-                   values_to = 'ratio',
-                   cols = 2: (ncol(data1$chi_table)+1) )
-  }else{
-    data1 <- data
+    if(raw){
+      data1 <- data
+      data_long <- data1$chi_table %>%
+        rownames_to_column("syllabic") %>%
+        pivot_longer(names_to = "accent",
+                     values_to = 'ratio',
+                     cols = 2: (ncol(data1$chi_table)+1) )
+    }else{
+      data1 <- data
 
-    data_long <- data1 %>% as.data.frame() %>%
-      rownames_to_column("syllabic") %>%
-      pivot_longer(names_to = "accent", values_to = 'ratio',
-                   cols = 2: (ncol(data1)+1) )
+      data_long <- data1 %>% as.data.frame() %>%
+        rownames_to_column("syllabic") %>%
+        pivot_longer(names_to = "accent", values_to = 'ratio',
+                     cols = 2: (ncol(data1)+1) )
 
-  }
+    }
 
     g = data_long%>% ggplot(aes(x = syllabic, y = ratio))+
       geom_bar(stat = "identity", aes( fill = syllabic),
@@ -2131,15 +3083,376 @@ patternGraph2 = function(data,
 }
 
 
+#patternGraph_obs_exp ----
+patternGraph3 = function(data, type="g",
+                         raw = TRUE,
+                         Ncol = NULL,
+                         yadd = 0.4,
+                         strip_size = 16,
+                         axis_size = 16,
+                         text_size = 13,
+                         data_graph = FALSE
+
+){
+
+  # g = patternGraph1(data, raw = FALSE)
+
+  if(data_graph){
+    data1 <- data
+  }else{
+    data1 <- data$data_graph
+  }
+
+
+  data_long0 <- data1 %>% as.data.frame() %>%
+    rownames_to_column("음절") %>%
+    pivot_longer(
+      # names_to = "음절",
+      # values_to = "ratio",
+      names_to = "성조형",values_to = '관측기대비율',
+      cols=2: (ncol(data1)+1) )
+
+  data_long_df <- data1 %>%
+    long_df(
+      # names_to = "음절", values_to="Freq",
+      names_to = "성조형",values_to = '관측기대비율',
+      rowname = "음절")%>%
+    jjstat::Round()
+
+  data_long_oe <- data1 %>%obs_exp_table() %>%
+    long_df(
+      # names_to = "음절", values_to="ratio",
+      names_to = "성조형",values_to = '관측기대비율',
+      rowname = "음절") %>%
+    jjstat::Round()
+
+  data_long_sig =  data1%>% p_sig_cal()%>%
+    long_df(
+      # names_to = "음절", values_to="star",
+      names_to = "성조형",values_to = 'star',
+      rowname = "음절")
+
+  data_long_p =  data1%>% p_value_cal()%>%
+    long_df(
+      # names_to = "음절", values_to="p.value",
+      names_to = "성조형",values_to = 'p.value',
+      rowname = "음절")
+
+  if(raw){
+    #contigency table인 경우
+    data_long = bind_cols(data_long_oe, data_long_sig[, 3]) %>%
+      tidyr::unite(Sig, 관측기대비율, star, remove = FALSE, sep = "")
+
+    g0 = data_long  %>% ggplot(aes(x = 성조형, y = 관측기대비율))
+
+  }else{
+    #관측/기대 표가 들어 온경우  kge_chisq_table에서 사용시
+    data_long = bind_cols(data_long_df, data_long_sig[, 3]) %>%
+      tidyr::unite(Sig, 관측기대비율, star, remove = FALSE, sep = "")
+
+    g0 = data_long  %>% ggplot(aes(x = 성조형, y = 관측기대비율))
+  }
 
 
 
 
+  g = g0 +geom_bar(stat = "identity", aes( fill = 성조형),
+                   position = "dodge", show.legend = FALSE)+
+    geom_hline(yintercept = 1, linetype=2, color="gray80")+
+    geom_text(aes(label =  Sig ),
+              hjust = -0.1, size = 4)+
+    ylim(0,max(data_long_oe[, 3])+ yadd)+
+    coord_flip()+
+    theme_bw()+
+    theme(axis.text = element_text(size= text_size),
+          axis.title = element_text(size= axis_size),
+          strip.text = element_text(size= strip_size)
+    )+
+    scale_fill_grey(start = 0, end = 0.7) +
+    facet_wrap(~ 음절 , ncol = Ncol)
 
+  res =  list(g, data_long,data_long_oe, data_long_sig, data_long_p)
+  g= g
+
+  switch(type,
+         res = res,
+         all = res,
+         g=g)
+}
+
+# kge_bind3a %>% filter(지역 =="부산"  & type=="고유어1") %>%
+#   auto_pattern2("고유어1a") %>%
+#   auto_pattern2("고유어1b") %>%
+#   kge_chisq_table("a1","성조", "고유어1 부산 onset") %>%
+#   patternGraph3(type="all")
+# #
+
+
+# kge_bind3a %>% filter(지역 =="부산"  & type=="고유어1") %>%
+#   auto_pattern2("고유어1a") %>%
+#   auto_pattern2("고유어1b") %>%
+#   kge_chisq_table("a1","성조", "고유어1 부산 onset", type = "data_graph") %>%
+#   patternGraph3(data_graph=T)
 # 대응분석 함수 -----------------------------------------------------------------
+# kge_bind3a %>% data.frame()
+
+# formula(paste("~ ", "성조"," + ", "a1", " + ", "a3"))
 
 
-ca_analysis = function(data, typekey= "", area="부산",
+
+# 대응분석 시각화 함수 ----------
+ca_analysis= function(dataset,
+                      typekey,
+                      selcol_3="w1f",
+                      type="all",
+                      arrows =c(F,T),
+                      selcol_1="성조",
+                      selcol_2="onset",
+                      area="부산",
+                      addtext="",
+                      xlim = NULL, #c(0, 0.3),
+                      ylim = NULL, #c(-0.3, 0.4)
+                      size_text= 5,
+                      opt=1
+
+){
+
+
+
+  if(selcol_3=="a3"){
+    data = dataset %>%
+      rename(onset = a1,
+             # coda = a3,
+             Coda = selcol_3
+      )
+
+    selcol_3 ="Coda"
+
+  }else{
+    data = dataset %>%
+      rename(onset = a1,
+             # coda = a3,
+             Weight = selcol_3
+      )
+    selcol_3="Weight"
+  }
+
+
+  #1,2,4와 3,5,6이 같음
+  if(opt==1){
+    df0 = data %>% filter(지역 == area & type == typekey) %>%
+      xtabs(formula = formula(
+        paste("~", selcol_1,"+", selcol_2, "+", selcol_3) ))
+  }else if(opt==2){
+    df0 = data %>% filter(지역 == area & type == typekey) %>%
+      xtabs(formula = formula(
+        paste("~", selcol_1,"+", selcol_3, "+", selcol_2) ))
+  }else if(opt==3){
+    df0 = data %>% filter(지역 == area & type == typekey) %>%
+      xtabs(formula = formula(
+        paste("~", selcol_2,"+", selcol_1, "+", selcol_3) ))
+
+  }else if(opt==4){
+    df0 = data %>% filter(지역 == area & type == typekey) %>%
+      xtabs(formula = formula(
+        paste("~", selcol_2,"+", selcol_3, "+", selcol_1) ))
+  }else if(opt==5){
+    df0 = data %>% filter(지역 == area & type == typekey) %>%
+      xtabs(formula = formula(
+        paste("~", selcol_3,"+", selcol_1, "+", selcol_2) ))
+  }else if(opt==6){
+    df0 = data %>% filter(지역 == area & type == typekey) %>%
+      xtabs(formula = formula(
+        paste("~", selcol_3,"+", selcol_2, "+", selcol_1) ))
+  }
+
+  df = df0%>% ca::mjca()
+  # df_graph = df$cols
+  explain =   round((df$inertia.e[1] +df$inertia.e[2])*100 , 2)
+
+  g = df %>% plot(arrows = arrows, col = 1:ncol(df0),
+                  main = paste( typekey,
+                                "에 관한 성조형과 음절 다중대응분석의 총 설명력(",
+                                explain , "%)"),
+                  xlim = xlim,
+                  ylim = ylim,
+                  cex.lab = 1.2,
+                  cex.sub = 1.2,cex=2,
+                  pch = 17, bg=1:3)
+
+  # graph_df= g$cols
+
+  graph_df = g$cols %>% data.frame() %>%
+    rownames_to_column("var") %>%
+    separate(var, c("factor", "level"), remove = FALSE, sep=":") %>%
+    select(-1)
+
+
+  graph_df_md = graph_df %>%
+    markdown_table(caption = paste0(typekey,
+                                    "(",area,")-",addtext,
+                                    "-다중대응분석 좌표점(",explain,"%)" ),
+                   digits = 4)
+
+  gplot = g$cols %>% data.frame() %>%
+    rownames_to_column("var") %>%
+    separate(var, c("factor", "level"), remove = FALSE, sep=":") %>%
+    ggplot(aes(x= Dim1, y=Dim2))+
+    geom_point(aes(color= factor), size=4, show.legend = FALSE)+
+    ggrepel::geom_text_repel(aes(label= var),
+                             # geom_text(aes(label= var),
+                             size = size_text,
+                             vjust = -0.7,
+                             hjust = -0.1)+
+    theme_bw()+
+    geom_vline(xintercept = 0, linetype=2)+
+    geom_hline(yintercept = 0, linetype=2)+
+    labs(
+      x = paste0("Dim1(", round(df$inertia.e[1]*100, 2),"%)"),
+      y = paste0("Dim2(", round(df$inertia.e[2]*100, 2),"%)"),
+      title = paste0("다중 대응분석(multiple Correspondence Analysis): ",
+                     selcol_1,", ",
+                     selcol_2,", ",
+                     selcol_3,"에 대한 ",
+                     "총 설명력(",explain,"%)")
+    )+
+    theme(axis.text = element_text(size=12))
+
+
+
+  # res =  list( df, g, df0)
+  res =  list(ca_res=df,
+              graph_df= g$cols,
+              graph_df_md = graph_df_md,
+              g=g,
+              gplot= gplot)
+
+  switch(type,
+         res = res,
+         all = res,
+         ca_res=df,
+         graph_df_md = graph_df_md,
+         graph_df= g$cols,
+         g=g,
+         gplot= gplot
+  )
+}
+
+
+# ca_analysis= function(dataset,
+#                       typekey,
+#                       selcol_3="a3",
+#                       arrows =c(F,F),
+#                       selcol_1="성조",
+#                       selcol_2="onset",
+#                       area="부산",title="",
+#                       xlim = NULL, #c(0, 0.3),
+#                       ylim = NULL, #c(-0.3, 0.4)
+#                       opt=1
+#                       ){
+#
+#
+#   data = dataset %>%
+#     rename(onset = a1,
+#            coda = a3,
+#            Weight = w1f
+#            )
+#
+#   #1,2,4와 3,5,6이 같음
+#   if(opt==1){
+#   df0 = data %>% filter(지역 == area & type == typekey) %>%
+#     xtabs(formula = formula(
+#       paste("~", selcol_1,"+", selcol_2, "+", selcol_3) ))
+#   }else if(opt==2){
+#     df0 = data %>% filter(지역 == area & type == typekey) %>%
+#       xtabs(formula = formula(
+#         paste("~", selcol_1,"+", selcol_3, "+", selcol_2) ))
+#   }else if(opt==3){
+#     df0 = data %>% filter(지역 == area & type == typekey) %>%
+#       xtabs(formula = formula(
+#         paste("~", selcol_2,"+", selcol_1, "+", selcol_3) ))
+#
+#   }else if(opt==4){
+#     df0 = data %>% filter(지역 == area & type == typekey) %>%
+#       xtabs(formula = formula(
+#         paste("~", selcol_2,"+", selcol_3, "+", selcol_1) ))
+#   }else if(opt==5){
+#     df0 = data %>% filter(지역 == area & type == typekey) %>%
+#       xtabs(formula = formula(
+#         paste("~", selcol_3,"+", selcol_1, "+", selcol_2) ))
+#   }else if(opt==6){
+#     df0 = data %>% filter(지역 == area & type == typekey) %>%
+#       xtabs(formula = formula(
+#         paste("~", selcol_3,"+", selcol_2, "+", selcol_1) ))
+#   }
+#
+#   df = df0%>% ca::mjca()
+#   df_graph = df$cols
+#   explain =   round((df$inertia.e[1] +df$inertia.e[2])*100 , 2)
+#
+#   g = df %>% plot(arrows = arrows, col = 1:ncol(df0),
+#                   main = paste(title,
+#                                typekey,
+#                                "에 관한 성조형과 음절의 총 설명력(",explain , "%)"),
+#                   # xlim = xlim,
+#                   # ylim = ylim,
+#                   cex.lab = 1.2,
+#                   cex.sub = 1.2,cex=2,
+#                   pch = 17, bg=1:3
+#   )
+#   gplot = g$cols %>% data.frame() %>%
+#     rownames_to_column("var") %>%
+#     separate(var, c("factor", "level"), remove = FALSE) %>%
+#     ggplot(aes(x= Dim1, y=Dim2))+
+#     geom_point(aes(color= factor), size=4, show.legend = FALSE)+
+#     ggrepel::geom_text_repel(aes(label= var),
+#     # geom_text(aes(label= var),
+#               size = 5,
+#               vjust = -0.5,
+#               hjust = -0.1)+
+#     theme_bw()+
+#     geom_vline(xintercept = 0, linetype=2)+
+#     geom_hline(yintercept = 0, linetype=2)+
+#     labs(
+#       x = paste0("Dim1(", round(df$inertia.e[1]*100, 2),"%)"),
+#       y = paste0("Dim2(", round(df$inertia.e[2]*100, 2),"%)"),
+#       title = paste0("대응분석(Correspondence Analysis): ",
+#                       selcol_1,", ",
+#                      selcol_2,", ",
+#                      selcol_3,"에 대한 ",
+#                      "총 설명력(",explain,"%)")
+#          )+
+#     theme(axis.text = element_text(size=12))
+#
+#
+#
+#   # res =  list( df, g, df0)
+#   res =  list( df, gplot)
+#   res
+# }
+#
+# kge_bind3a %>% data.frame()
+#
+#
+# kge_bind3a %>% ca_analysis("고유어1", "Weight")#,3
+# # kge_bind3a %>% ca_analysis("고유어1", "Weight", opt=1)#,3
+# # kge_bind3a %>% ca_analysis("고유어1", "w1f", opt=2)#,2
+# # kge_bind3a %>% ca_analysis("고유어1", "w1f", opt=4)#,
+# #
+# # kge_bind3a %>% ca_analysis("고유어1", "w1f", opt=3)#,
+# # kge_bind3a %>% ca_analysis("고유어1", "w1f", opt=5)#, 1
+# # kge_bind3a %>% ca_analysis("고유어1", "w1f", opt=6)#, 1
+#
+# kge_bind3a %>% ca_analysis("고유어1", "coda")
+#
+# kge_bind3a %>% ca_analysis("고유어2", "weight")#, xlim=c(-0.3, 0.5))
+#
+# kge_bind3a %>% select(type, a1, a3, w1f) %>%
+#             rename(onset = "a1", coda = a3)
+
+
+
+ca_analysis0 = function(data, typekey= "", area="부산",
                        col = c("black","red","blue"),
                        arrows = c(F, T),
                        col.row = "gray30",
@@ -2614,8 +3927,8 @@ bind_agree_tabe = function(data, wordkey,
              res1,
              markdown = res1 %>%
                markdown_table(font_size = 20,
-                 caption = paste0(wordkey,": ",Area, Age1,"대, ",
-                                  "",Area, Age2,"대")),
+                              caption = paste0(wordkey,": ",Area, Age1,"대, ",
+                                               "",Area, Age2,"대")),
              plot= res_mosaicplot)
   RES
 }

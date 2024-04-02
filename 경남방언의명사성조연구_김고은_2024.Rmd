@@ -1,0 +1,67 @@
+---
+title: "경남방언의 명사 성조 연구(김고은 PhD)"
+author: "analysis byPark Joonghee"
+date: "2024-04-01"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+## Observe/Expected table 
+**observed/expected** 비율은 카이제곱 검정에서 중요한 지표입니다. 그러나 이 비율만으로는 상관관계의 유의성을 결정할 수 없습니다. 여기에 대한 인용자료는 다음과 같습니다:
+
+1. **카이제곱 검정과 관련된 통계학 교재 및 논문:**
+   - Agresti, A. (2002). Categorical Data Analysis (2nd ed.). Wiley.
+   - Sokal, R. R., & Rohlf, F. J. (2012). Biometry: The Principles and Practice of Statistics in Biological Research (4th ed.). W. H. Freeman.
+
+2. **관찰값과 기대값 비율 해석:**
+   - **observed/expected > 1**: 관찰값이 기대값보다 크다는 것은 두 변수 간에 양의 상관관계가 있을 가능성이 높다는 의미입니다. 그러나 이것만으로는 유의성을 결정할 수 없습니다.
+   - **observed/expected < 1**: 관찰값이 기대값보다 작다는 것은 두 변수 간에 음의 상관관계가 있을 가능성이 높다는 의미입니다. 그러나 이것도 유의성을 결정하는 데에는 부족합니다.
+
+3. **통계적 유의성 검정:**
+   - 카이제곱 검정은 귀무가설과 대립가설을 설정하여 수행합니다.
+   - p-값을 계산하여 유의수준과 비교합니다.
+   - p-값이 유의수준보다 작으면 귀무가설을 기각하고, 두 변수 간에 통계적으로 유의한 상관관계가 있다고 결론합니다.
+
+요약하자면, **observed/expected** 비율은 상관관계의 방향성을 나타내지만, 유의성을 평가하기 위해서는 카이제곱 검정의 결과와 p-값을 함께 고려해야 합니다. 또한 Cramer's V 값을 이용하여 어느 정도의 상관이 있는지 확인해야 합니다. 
+
+
+
+
+Cramer’s V (크레이머의 V):
+Cramer’s V는 두 개의 범주형 변수 간의 상관관계를 측정하는 지표입니다.
+범위는 0에서 1까지이며, 값이 1에 가까울수록 두 변수 간의 상관관계가 높다고 해석됩니다.
+공식: Cramer’s V는 다음과 같이 계산됩니다: 
+
+
+$$ V = \sqrt{\frac{X^2}{n \cdot \min(c-1, \;r-1)}} $$
+
+여기서:
+(X^2): 카이제곱 통계량
+(n): 총 샘플 크기
+(r): 행의 수
+(c): 열의 수
+Adjusted Cramer’s V (조정된 크레이머의 V):
+Adjusted Cramer’s V는 크레이머의 V를 보정한 지표입니다.
+크레이머의 V는 행과 열의 크기에 따라 편향될 수 있습니다. 따라서 보정된 지표를 사용하여 더 정확한 상관관계를 평가합니다.
+공식: 조정된 크레이머의 V는 다음과 같이 계산됩니다: 
+
+
+$$\text{Adjusted Cramer’s V} = \frac{\text{Cramer’s V}}{\sqrt{\min(c-1, \; r-1)}} $$
+
+V=1 완전한 연관
+V < 0.25약한 연관 
+V > 0.75는 강한 연관 
+
+![](F:/Rwork/02_OutAna/kimgoeun_seoul_phD2024/cramerv.png)
+
+
+ Cramér, Harald. 1946. Mathematical Methods of Statistics. Princeton: Princeton University Press, page 282 (Chapter 21. The two-dimensional case). ISBN 0-691-08004-6 (table of content Archived 2016-08-16 at the Wayback Machine)
+ 
+ 
+ 참고
+https://peterstatistics.com/CrashCourse/3-TwoVarUnpair/NomNom/NomNom-2c-Effect-Size.html

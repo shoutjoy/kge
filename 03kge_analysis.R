@@ -818,7 +818,7 @@ kge_bind2a %>% filter(지역 =="부산" & type=="고유어3") %>%
 kge_bind2a %>% filter(지역 =="부산" & type=="고유어3") %>%
   auto_pattern("고유어3") %>%
   kge_chisq_table("a1","성조", "고유어3 부산 onset")%>%
-  patternGraph2()
+  patternGraph1()
 
 #* 고유어3 부산 종성 2개 weight (light, heavy)
 kge_bind2a %>% filter(지역 =="부산" & type=="고유어3") %>%
